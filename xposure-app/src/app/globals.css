@@ -1,0 +1,55 @@
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* خطوط next/font تُحقن كمتغيرات، ونربطها بأدوار الطباعة في tokens.json */
+:root {
+  --font-display: var(--font-cairo), "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-tajawal), "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-roboto-mono), "Courier New", monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  html[data-theme="light"] {
+    color-scheme: light;
+  }
+  body {
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    -webkit-font-smoothing: antialiased;
+    /* الأرقام غربية (0-9) دائماً، حتى داخل النص العربي */
+    font-variant-numeric: lining-nums;
+  }
+  /* حلقة التركيز لا تُحذف أبداً عن أي عنصر تفاعلي */
+  :focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  a {
+    color: var(--brand);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--brand-hover);
+    text-decoration: underline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

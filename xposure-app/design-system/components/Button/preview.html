@@ -1,0 +1,52 @@
+<!-- @dsCard group="المكونات الأساسية" height=220 subtitle="خمسة أنماط: الإجراء الرئيسي، الثانوي، النجاح، الرفض، والشفاف" -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;600&display=swap">
+<div dir="rtl" style="font-family: var(--font-body); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-5);">
+
+  <div style="display:flex; gap: var(--space-3); flex-wrap: wrap;">
+    <button class="xp-btn xp-btn--primary">اعتماد</button>
+    <button class="xp-btn xp-btn--secondary">طلب تحليل إضافي</button>
+    <button class="xp-btn xp-btn--success">حفظ</button>
+    <button class="xp-btn xp-btn--danger">رفض</button>
+    <button class="xp-btn xp-btn--ghost">إلغاء</button>
+  </div>
+
+  <div style="display:flex; gap: var(--space-3); flex-wrap: wrap;">
+    <button class="xp-btn xp-btn--primary" disabled>اعتماد (معطّل)</button>
+    <button class="xp-btn xp-btn--primary xp-btn--focus">اعتماد (focus)</button>
+  </div>
+
+  <p class="body-sm" style="color: var(--ink-muted); margin:0; max-width: 560px;">
+    نص كل زر مصمت بلون <code class="code" style="background:var(--surface-overlay); padding:2px 6px; border-radius:var(--radius-sm);">ink</code>
+    دائماً — أبيض في الوضع الداكن، أسود في الفاتح. الخلفية هي لون الزر ممزوجاً بـ
+    <code class="code" style="background:var(--surface-overlay); padding:2px 6px; border-radius:var(--radius-sm);">surface</code>
+    لضمان تباين كافٍ في كلا الوضعين. الزر المجوف (ghost) وحده استثناء: نصه وحدوده بلون brand.
+  </p>
+
+</div>
+
+<style>
+  .xp-btn {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    color: var(--ink);
+    transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
+  }
+  .xp-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); filter: brightness(1.1); }
+  .xp-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .xp-btn--primary  { background: color-mix(in srgb, var(--brand) 55%, var(--surface)); }
+  .xp-btn--success  { background: color-mix(in srgb, var(--success) 55%, var(--surface)); }
+  .xp-btn--danger   { background: color-mix(in srgb, var(--danger) 55%, var(--surface)); }
+
+  .xp-btn--secondary { background: var(--surface-overlay); }
+
+  .xp-btn--ghost { background: transparent; color: var(--brand); border: 2px solid var(--brand); padding: calc(var(--space-3) - 2px) calc(var(--space-5) - 2px); }
+  .xp-btn--ghost:hover { background: var(--brand); color: var(--on-brand); filter:none; }
+
+  .xp-btn--focus { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+</style>

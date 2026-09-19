@@ -1,0 +1,61 @@
+<!-- @dsCard group="الجداول" height=280 width=760 subtitle="جدول التغييرات: رأس ثابت، صفوف متعرّجة، حالة hover" -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+<div dir="rtl" style="font-family: var(--font-body); padding: var(--space-6); background: var(--surface);">
+  <table class="xp-table">
+    <thead>
+      <tr>
+        <th>التغيير</th>
+        <th>الجهة</th>
+        <th>الأولوية</th>
+        <th>الحالة</th>
+        <th>التاريخ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="xp-row--hover">
+        <td>تشديد متطلبات التشفير</td>
+        <td>الأمن السيبراني</td>
+        <td><span class="xp-p" style="background:var(--danger); color:var(--on-danger);">● حرج</span></td>
+        <td><span class="xp-s" style="background:var(--info); color:var(--on-info);">جديد</span></td>
+        <td>2026-09-16</td>
+      </tr>
+      <tr>
+        <td>تحديث سياسات الجودة</td>
+        <td>SASO</td>
+        <td><span class="xp-p" style="background:var(--warning); color:var(--on-warning);">● استراتيجي</span></td>
+        <td><span class="xp-s" style="background:var(--warning); color:var(--on-warning);">معلق</span></td>
+        <td>2026-09-15</td>
+      </tr>
+      <tr>
+        <td>توضيح نطاق الفحص السنوي</td>
+        <td>الأمن السيبراني</td>
+        <td><span class="xp-p" style="background:var(--surface-overlay); color:var(--ink-muted);">● متابعة</span></td>
+        <td><span class="xp-s" style="background:var(--success); color:var(--on-success);">معتمد</span></td>
+        <td>2026-09-10</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<style>
+  .xp-table { width:100%; border-collapse: collapse; font-size: 13px; }
+  .xp-table thead th {
+    text-align: start;
+    padding: var(--space-3);
+    color: var(--ink-muted);
+    font-weight: 700;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .xp-table tbody td {
+    padding: var(--space-3);
+    color: var(--ink);
+    border-bottom: 1px solid var(--border);
+  }
+  .xp-table tbody tr:nth-child(even) { background: var(--surface-raised); }
+  .xp-table tbody tr:hover, .xp-row--hover { background: var(--surface-overlay) !important; cursor: pointer; }
+  .xp-p, .xp-s {
+    display:inline-flex; align-items:center; font-size:12px; font-weight:700; padding: 3px 9px;
+  }
+  .xp-p { border-radius: var(--radius-full); gap:4px; }
+  .xp-s { border-radius: var(--radius-sm); }
+</style>

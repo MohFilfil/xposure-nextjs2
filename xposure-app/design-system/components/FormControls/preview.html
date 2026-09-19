@@ -1,0 +1,43 @@
+<!-- @dsCard group="النماذج" height=320 width=420 subtitle="حقل نصي، قائمة منسدلة، مربع اختيار — بحالاتها" -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+<div dir="rtl" style="font-family: var(--font-body); padding: var(--space-6); background: var(--surface); display:flex; flex-direction:column; gap: var(--space-5); max-width:340px;">
+
+  <div>
+    <label class="xp-label">البحث في التغييرات</label>
+    <input class="xp-input" type="text" placeholder="اكتب كلمة مفتاحية…" />
+  </div>
+
+  <div>
+    <label class="xp-label">سبب الرفض</label>
+    <input class="xp-input xp-input--error" type="text" value="" placeholder="هذا الحقل مطلوب" />
+    <span class="xp-error">لا يمكن رفض تغيير دون ذكر السبب.</span>
+  </div>
+
+  <div>
+    <label class="xp-label">الجهة التنظيمية</label>
+    <select class="xp-select">
+      <option>كل الجهات</option>
+      <option>الأمن السيبراني</option>
+      <option>SASO</option>
+    </select>
+  </div>
+
+  <label class="xp-check">
+    <input type="checkbox" checked />
+    <span>تضمين التغييرات المعتمدة في التصدير</span>
+  </label>
+
+</div>
+<style>
+  .xp-label { display:block; font-size:13px; font-weight:500; color: var(--ink-muted); margin-bottom:6px; }
+  .xp-input, .xp-select {
+    width:100%; box-sizing:border-box; font-family: var(--font-body); font-size:14px; color: var(--ink);
+    background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: var(--space-3); outline: none; transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+  .xp-input:focus, .xp-select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--border-focus) 25%, transparent); }
+  .xp-input--error { border-color: var(--danger); }
+  .xp-error { display:block; font-size:12px; color: var(--danger); margin-top:4px; }
+  .xp-check { display:flex; align-items:center; gap: var(--space-2); font-size:14px; color: var(--ink); cursor:pointer; }
+  .xp-check input { width:18px; height:18px; accent-color: var(--brand); }
+</style>

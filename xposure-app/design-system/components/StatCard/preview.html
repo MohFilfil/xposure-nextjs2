@@ -1,0 +1,40 @@
+<!-- @dsCard group="لوحة التحكم" height=200 width=760 subtitle="مؤشرات KPI في أعلى لوحة التحكم" -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Tajawal:wght@400;500&display=swap">
+<div dir="rtl" style="font-family: var(--font-body); padding: var(--space-6); background: var(--surface); display:grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4);">
+
+  <div class="xp-stat">
+    <span class="body-sm" style="color: var(--ink-muted);">إجمالي التغييرات</span>
+    <span class="display-sm" style="color: var(--ink); font-weight:700;">47</span>
+    <span class="body-sm" style="color: var(--success);">↑ 12 هذا الأسبوع</span>
+  </div>
+
+  <div class="xp-stat" style="border-inline-start: 3px solid var(--danger);">
+    <span class="body-sm" style="color: var(--ink-muted);">قضايا حرجة</span>
+    <span class="display-sm" style="color: var(--danger); font-weight:700;">3</span>
+    <span class="body-sm" style="color: var(--ink-muted);">تتطلب اعتماداً فورياً</span>
+  </div>
+
+  <div class="xp-stat">
+    <span class="body-sm" style="color: var(--ink-muted);">المهام المنجزة</span>
+    <span class="display-sm" style="color: var(--ink); font-weight:700;">12<span style="font-size:16px; color:var(--ink-muted); font-weight:400;">/15</span></span>
+    <span class="body-sm" style="color: var(--ink-muted);">80% نسبة الإنجاز</span>
+  </div>
+
+  <div class="xp-stat">
+    <span class="body-sm" style="color: var(--ink-muted);">درجة الامتثال</span>
+    <span class="display-sm" style="color: var(--success); font-weight:700;">85%</span>
+    <span class="body-sm" style="color: var(--ink-muted);">مقارنة بالربع السابق: 78%</span>
+  </div>
+
+</div>
+<style>
+  .xp-stat {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+</style>
