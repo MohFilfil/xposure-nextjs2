@@ -57,9 +57,9 @@ export default function SettingsPage() {
         <Card className="max-w-[640px]">
           <CardHead title="بيانات المستخدم" />
           <div className="flex flex-col gap-5">
-            <Input label="الاسم" defaultValue="ريم الدوسري" readOnly />
-            <Input label="الدور" defaultValue="مسؤولة الامتثال — صلاحية مراجعة واعتماد" readOnly />
-            <Input label="البريد الداخلي" defaultValue="r.aldosari@internal.local" readOnly />
+            <Input label="الاسم" defaultValue="محمد الفلفل" readOnly />
+            <Input label="الدور" defaultValue="مسؤول الامتثال — صلاحية مراجعة واعتماد" readOnly />
+            <Input label="البريد الداخلي" defaultValue="m.alfilfil@internal.local" readOnly />
           </div>
           <CardFoot>الأدوار ثابتة في النسخة الأولى وتُدار من مسؤول النظام.</CardFoot>
         </Card>

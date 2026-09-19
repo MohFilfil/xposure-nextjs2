@@ -46,9 +46,9 @@ export function Navbar({ title, onMenu }: { title: string; onMenu: () => void })
         <div className="flex items-center gap-2">
           {/* الصورة الرمزية: دائرية بخلفية brand وحرف واحد — لا أيقونة شخص عامة */}
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand font-body text-body-sm font-bold text-on-brand" aria-hidden>
-            ر
+            م
           </span>
-          <span className="hidden font-body text-body-sm text-ink-muted md:inline">ريم الدوسري</span>
+          <span className="hidden font-body text-body-sm text-ink-muted md:inline">محمد الفلفل</span>
         </div>
       </div>
     </header>
