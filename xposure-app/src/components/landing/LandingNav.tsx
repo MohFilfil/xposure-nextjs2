@@ -85,7 +85,7 @@ export function LandingNav() {
 
           <Link
             href="/login"
-            className="rounded-md bg-brand px-4 py-2.5 font-body text-body-sm font-semibold text-on-brand transition-colors duration-2 hover:bg-brand-hover"
+            className="rounded-md bg-brand px-4 py-2.5 font-body text-body-sm font-semibold text-on-brand transition-colors duration-2 hover:bg-brand-hover hover:text-on-brand hover:no-underline"
           >
             {c.nav.demoCta}
           </Link>

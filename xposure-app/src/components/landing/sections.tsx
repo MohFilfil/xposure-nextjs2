@@ -65,13 +65,13 @@ export function Hero() {
           <div className="flex w-full flex-col items-stretch gap-3 pt-1 sm:w-auto sm:flex-row sm:items-center">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-brand px-6 py-3.5 font-body text-body font-semibold text-on-brand transition-colors duration-2 hover:bg-brand-hover"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-brand px-6 py-3.5 font-body text-body font-semibold text-on-brand transition-colors duration-2 hover:bg-brand-hover hover:text-on-brand hover:no-underline"
             >
               {c.hero.primaryCta}
             </Link>
             <a
               href="#how"
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-border px-6 py-3.5 font-body text-body font-semibold text-ink transition-colors duration-2 hover:border-brand hover:text-brand"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-border px-6 py-3.5 font-body text-body font-semibold text-ink transition-colors duration-2 hover:border-brand hover:text-brand hover:no-underline"
             >
               {c.hero.secondaryCta}
               {/* السهم يتبع اتجاه القراءة: يسار في العربية، يمين في الإنجليزية */}
@@ -354,7 +354,7 @@ export function FinalCta() {
           <p className="max-w-[58ch] font-body text-body-lg leading-[1.9] text-ink-muted">{c.cta.body}</p>
           <Link
             href="/login"
-            className="mt-2 inline-flex items-center gap-2 rounded-md bg-brand px-7 py-4 font-body text-body font-semibold text-on-brand transition-colors duration-2 hover:bg-brand-hover"
+            className="mt-2 inline-flex items-center gap-2 rounded-md bg-brand px-7 py-4 font-body text-body font-semibold text-on-brand transition-colors duration-2 hover:bg-brand-hover hover:text-on-brand hover:no-underline"
           >
             {c.cta.button}
           </Link>
