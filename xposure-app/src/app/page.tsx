@@ -6,81 +6,61 @@ import { useI18n } from "@/components/I18nProvider";
 import { useContent } from "@/lib/content";
 
 /**
- * الصفحة التعريفية العامة لـ Xposure.
+ * الصفحة التعريفية العامة.
  *
- * الفكرة: فتحة العدسة التي يعنيها اسم المنتج (Xposure — التعرّض) تصير الفتحةَ
- * التي يُرى من خلالها نصّ البند المتغيّر. الشكل نفسه يعود قناعاً لكل صورة،
- * وشكلاً لزر الإجراء، ونقطةً أمام عناصر القوائم، وعلامةً على الخط الزمني.
+ * الاتجاه: «النوع ولا شيء غيره». الشاشة الأولى كلمات وحدها — بلا صورة وبلا شكل —
+ * والصور تأتي بعدها كبيرة وقليلة، وكلها صور حقيقية لعالم هذا المنتج (لوحة دوائر،
+ * مجهر على عطل، غرفة خوادم، الرياض) مع نسبتها في التذييل.
  *
- * الشيء الحيّ: المقارنة. يختار الزائر بنداً فتنفتح الفتحة على نصّه قبل وبعد،
- * ببيانات المنتج الحقيقية (lib/data.ts) لا بنصّ معروض.
+ * الفكرة: نصّ الضابط كما نشرته الجهة هو مادة الصفحة. ما يبيعه هذا المنتج ليس
+ * لوحة معلومات بل الكلمات التي تغيّرت في وثيقة مُلزِمة — فالصفحة تعرض تلك الكلمات
+ * نفسها، بخطّ كبير، مأخوذة من بيانات المنتج (lib/data.ts) لا من نصّ معروض.
+ *
+ * الشيء الحيّ: الزائر يختار رقم بند فيقرأ نصّه قبل وبعد، مع سطر الاستشهاد الذي
+ * يقول من أي وثيقة وأي صفحة — وهو ما يفعله مسؤول الامتثال في التطبيق نفسه.
  */
 
-/** فتحة العدسة: حلقة مصمتة بفجوة سداسية، تقطعها ست شفرات. الشكل الوحيد في الصفحة. */
-function Iris({ className, title }: { className?: string; title?: string }) {
-  const R = 100;
-  const hex = Array.from({ length: 6 }, (_, i) => {
-    const a = (i * 60 * Math.PI) / 180;
-    return [100 + 46 * Math.cos(a), 100 + 46 * Math.sin(a)];
-  });
-  const hexPath = hex.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`).join(" ") + " Z";
-  const blades = hex.map(([x, y], i) => {
-    const a = ((i * 60 + 34) * Math.PI) / 180;
-    return [x, y, 100 + R * Math.cos(a), 100 + R * Math.sin(a)];
-  });
-
-  return (
-    <svg viewBox="0 0 200 200" className={className} role={title ? "img" : undefined} aria-hidden={title ? undefined : true}>
-      {title && <title>{title}</title>}
-      <path
-        d={`M100,0 A100,100 0 1,1 99.99,0 Z ${hexPath}`}
-        fill="currentColor"
-        fillRule="evenodd"
-      />
-      {blades.map(([x1, y1, x2, y2], i) => (
-        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--s-ground)" strokeWidth="2.6" />
-      ))}
-    </svg>
-  );
-}
-
-/** نقطة القائمة بشكل الفتحة نفسها، بمقاس النص. */
-function IrisBullet() {
-  return (
-    <span
-      aria-hidden
-      className="s-iris-mask"
-      style={{ width: 11, height: 11, background: "var(--s-accent)", flexShrink: 0, marginTop: 8 }}
-    />
-  );
-}
+/** الصور: كلها من مجموعات مفتوحة، منسوبة في التذييل، ولا تُقدَّم على أنها منشأة عميل. */
+const PICTURES = {
+  microscope: "/site/microscope.jpg",
+  operator: "/site/operator.jpg",
+  skyline: "/site/skyline.jpg",
+  board: "/site/board.png",
+  datacenter: "/site/datacenter.jpg",
+  kafd: "/site/riyadh.jpg"
+};
 
 export default function SitePage() {
   const root = useRef<HTMLDivElement>(null);
-  const [clause, setClause] = useState(0);
   const { t, lang, setLang } = useI18n();
   const { changes } = useContent();
-  const site = t.site;
-  /* البنود المعروضة تتبع لغة الواجهة، والمقارنة تُقرأ من بيانات المنتج نفسها */
-  const PICK = changes.slice(0, 5);
-  const DEMO_MAIL =
-    "mailto:demo@xposure.local?subject=" +
-    encodeURIComponent(site.mailSubject) +
-    "&body=" +
-    encodeURIComponent(site.mailBody);
+  const s = t.site2;
+
+  const picks = changes.slice(0, 5);
+  const [clause, setClause] = useState(0);
+  const c = picks[clause] ?? picks[0];
+
+  /** الجملة الكبيرة في قسم العزل: عنصر واحد مضيء في كل لحظة، يتنقّل كل ثانيتين. */
+  const [lit, setLit] = useState(0);
+  const guarantees = t.site.trustPoints;
+
+  useEffect(() => {
+    const id = setInterval(() => setLit((i) => (i + 1) % guarantees.length), 2000);
+    return () => clearInterval(id);
+  }, [guarantees.length]);
 
   /**
    * الحركة تُركَّب بعد التحميل: الصفحة مكتوبة كاملة في HTML، وإن لم يعمل السكربت
-   * ظهر كل شيء في مكانه. الفئة s-ready هي ما يفتح باب الانتقالات.
+   * ظهر كل شيء في مكانه. الفئة s-ready وحدها هي ما يفتح باب الانتقالات.
    */
   useEffect(() => {
     const el = root.current;
     if (!el) return;
     el.classList.add("s-ready");
 
-    const targets = Array.from(el.querySelectorAll<HTMLElement>(".s-rise, .s-shutter"));
+    const targets = Array.from(el.querySelectorAll<HTMLElement>(".s-rise, .s-mask"));
     if (typeof IntersectionObserver === "undefined") {
-      targets.forEach((t) => t.setAttribute("data-shown", "true"));
+      targets.forEach((x) => x.setAttribute("data-shown", "true"));
       return;
     }
     const io = new IntersectionObserver(
@@ -92,697 +72,480 @@ export default function SitePage() {
           }
         });
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.05 }
     );
-    targets.forEach((t) => io.observe(t));
+    /**
+     * ما يقع في الشاشة الأولى يتحرّك عند التحميل لا عند التمرير: المراقب لا يُطلق
+     * لما هو ظاهر أصلاً إلا بعد دورة، فكانت جملة الصدارة وزرّها يغيبان عن أول لقطة.
+     */
+    targets.forEach((x) => {
+      if (x.getBoundingClientRect().top < window.innerHeight * 0.9) x.setAttribute("data-shown", "true");
+      else io.observe(x);
+    });
     /* شبكة أمان: لا يبقى محتوى مخفياً إن تعثّر المراقب */
-    const failsafe = setTimeout(() => targets.forEach((t) => t.setAttribute("data-shown", "true")), 1600);
+    const failsafe = setTimeout(() => targets.forEach((x) => x.setAttribute("data-shown", "true")), 1800);
     return () => {
       io.disconnect();
       clearTimeout(failsafe);
     };
-  }, []);
+  }, [lang]);
 
-  const c = PICK[clause];
-  const waves = Array.from(new Set(changes.map((x) => x.effective))).sort();
+  const stairs = [
+    { q: s.q1, a: s.a1 },
+    { q: s.q2, a: s.a2 },
+    { q: s.q3, a: s.a3 },
+    { q: s.q4, a: s.a4 },
+    { q: s.q5, a: s.a5 }
+  ];
+
+  const stages = [s.stage1, s.stage2, s.stage3, s.stage4, s.stage5];
+
+  /** صفوف الإيصال تجمع فعلاً: 47 = 12 + 35، و12 = 4 + 3 + 3 + 2. */
+  const byPriority = (p: string) => changes.filter((x) => x.priority === p).length;
+  const kept = changes.length;
 
   return (
-    <div className="site" ref={root}>
-      {/* ---------- شريط التنقل ---------- */}
-      <div className="s-wrap">
+    <div className="site" ref={root} dir={lang === "ar" ? "rtl" : "ltr"}>
+      {/* ---------- الشاشة الأولى: الترويسة والجملة والفعل في 100svh واحدة ---------- */}
+      <header className="s-wrap s-hero" id="top">
         <nav className="s-nav">
-          <a href="#top" style={{ fontSize: 27, fontWeight: 700, textDecoration: "none", letterSpacing: "-0.02em" }}>
+          <a href="#top" style={{ fontSize: 24, fontWeight: 700, textDecoration: "none", letterSpacing: "-0.02em" }}>
             Xposure
           </a>
           <div className="s-nav-links">
-            <a href="#problem" className="s-nav-hide">
-              {site.navProblem}
+            <a href="#clause" className="s-nav-hide">
+              {s.navCompare}
             </a>
-            <a href="#compare">{site.navCompare}</a>
             <a href="#how" className="s-nav-hide">
-              {site.navHow}
-            </a>
-            <a href="#roles" className="s-nav-hide">
-              {site.navRoles}
+              {s.navHow}
             </a>
             <a href="#isolation" className="s-nav-hide">
-              {site.navTrust}
+              {s.navTrust}
             </a>
-            {/* مبدّل اللغة: الصفحة العامة تُقرأ قبل الدخول، فاللغة تُختار منها لا من الإعدادات */}
-            <button
-              type="button"
-              onClick={() => setLang(lang === "ar" ? "en" : "ar")}
-              aria-label={lang === "ar" ? "Switch to English" : "التحويل إلى العربية"}
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                font: "inherit",
-                color: "inherit",
-                cursor: "pointer"
-              }}
-            >
+            <button type="button" onClick={() => setLang(lang === "ar" ? "en" : "ar")}>
               {lang === "ar" ? "English" : "العربية"}
             </button>
-            <a href="/login" style={{ fontWeight: 700 }}>
-              {site.navEnter}
+            <a href="/login" style={{ color: "var(--s-ink)", fontWeight: 700 }}>
+              {s.navEnter}
             </a>
           </div>
         </nav>
-      </div>
 
-      {/* ---------- الصدارة ---------- */}
-      <header className="s-wrap s-hero" id="top">
-        <Iris className="s-hero-iris" />
-        <div className="s-hero-text">
-          <h1 className="s-display s-rise">
-            {site.heroLine1}
-            <br />
-            {site.heroLine2}
-          </h1>
-          <p className="s-lede s-rise" style={{ marginBlockStart: 28, ["--d" as string]: "90ms" }}>
-            {site.heroLede}
+        <h1 className="s-display s-hero-statement">
+          <span className="s-mask">
+            <span>{s.heroLine1}</span>
+          </span>
+          <span className="s-mask" style={{ ["--d" as string]: "110ms" }}>
+            <span>{s.heroLine2}</span>
+          </span>
+        </h1>
+
+        <div className="s-hero-foot">
+          <p className="s-body s-rise" style={{ maxWidth: "46ch", ["--d" as string]: "320ms" }}>
+            {s.heroNote}
           </p>
-          <div
-            className="s-rise"
-            style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBlockStart: 40, ["--d" as string]: "180ms" }}
-          >
-            <a className="s-btn s-cut" href="/login">
-              {site.heroCta}
-            </a>
-            <a className="s-btn-quiet s-cut" href="#compare">
-              {site.heroCtaQuiet}
-            </a>
-          </div>
+          <a className="s-btn s-rise" href="/login" style={{ ["--d" as string]: "400ms" }}>
+            {s.heroAction}
+          </a>
         </div>
       </header>
 
-      {/* ---------- المشكلة ---------- */}
-      {/**
-       * خمسة أسئلة يعرفها من يعمل في الامتثال، وجوابُ كل سؤال هو الألم نفسه.
-       * صفوف عريضة لا بطاقات: السؤال على حافة البداية والجواب يقابله.
-       */}
-      <section className="s-section" id="problem" style={{ background: "var(--s-field)" }}>
+      {/* ---------- المشكلة: سلّم من خمسة أسئلة، وصورتان في الربع الأخير ---------- */}
+      <section className="s-section s-field">
         <div className="s-wrap">
-          <h2 className="s-h2 s-rise">{site.problemTitle}</h2>
-          <p className="s-lede s-rise" style={{ marginBlockStart: 22, maxWidth: "54ch", ["--d" as string]: "80ms" }}>
-            {site.problemLede}
-          </p>
+          <div className="s-problem">
+            <div>
+              <p className="s-note s-rise" style={{ marginBottom: "clamp(28px, 3.4vw, 48px)", maxWidth: "48ch" }}>
+                {s.stairsNote}
+              </p>
 
-          <div style={{ marginBlockStart: 56, display: "grid", gap: 10 }}>
-            {site.pains.map((x, i) => (
-              <div
-                key={x.q}
-                className="s-rise"
-                style={{
-                  background: "var(--s-ground)",
-                  padding: "clamp(22px, 2.6vw, 34px)",
-                  display: "grid",
-                  gap: "clamp(10px, 2vw, 44px)",
-                  gridTemplateColumns: "minmax(190px, 0.42fr) 1fr",
-                  alignItems: "start",
-                  ["--d" as string]: `${i * 70}ms`
-                }}
-              >
-                <h3 className="s-h3" style={{ margin: 0 }}>
-                  {x.q}
-                </h3>
-                <p className="s-body" style={{ margin: 0 }}>
-                  {x.a}
-                </p>
+              <div className="s-stairs">
+                {stairs.map((x, i) => (
+                  <div key={x.q} className="s-stair s-rise" style={{ ["--d" as string]: `${i * 70}ms` }}>
+                    <q>{x.q}</q>
+                    <p>{x.a}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <p className="s-note s-rise" style={{ marginBlockStart: 28, maxWidth: "64ch" }}>
-            {site.problemFoot}
-          </p>
+              <p className="s-mid s-rise" style={{ marginTop: "clamp(40px, 5vw, 80px)", maxWidth: "34ch" }}>
+                {s.stairsFoot}
+              </p>
+            </div>
+
+            {/* صورتان مكدّستان، أعلاهما محاذية لأول سطر في السلّم */}
+            <figure className="s-figure s-rise" style={{ ["--d" as string]: "200ms" }}>
+              <img
+                src={PICTURES.microscope}
+                width={1920}
+                height={1440}
+                alt={lang === "ar" ? "مكوّن محترق على لوحة دوائر مطبوعة تحت المجهر." : "A burnt component on a printed circuit board under a microscope."}
+                loading="lazy"
+                decoding="async"
+                className="s-shot"
+                style={{ aspectRatio: "3 / 2" }}
+              />
+              <img
+                src={PICTURES.operator}
+                width={1365}
+                height={2048}
+                alt={
+                  lang === "ar"
+                    ? "محطة عمل مشغّل داخل مركز معالجة بيانات، وخلفها خزائن الخوادم."
+                    : "An operator's workstation inside a data processing centre, server cabinets behind it."
+                }
+                loading="lazy"
+                decoding="async"
+                className="s-shot"
+                style={{ aspectRatio: "3 / 2" }}
+              />
+            </figure>
+          </div>
         </div>
       </section>
 
-      {/* ---------- الشيء الحيّ: المقارنة ---------- */}
-      <section className="s-section" id="compare" style={{ background: "var(--s-field)" }}>
+      {/* ---------- الشيء الحيّ: اقرأ الضابط كما نُشر ---------- */}
+      <section className="s-section" id="clause">
         <div className="s-wrap">
-          <h2 className="s-h2 s-rise">{site.compareTitle}</h2>
-          <p className="s-body s-rise" style={{ marginBlockStart: 20, ["--d" as string]: "80ms" }}>
-            {site.compareLede1} <span dir="ltr">ECC-1:2018</span> {site.compareLede2}{" "}
-            <span dir="ltr">ECC-2:2024</span>. {site.compareLede3}
+          <h2 className="s-big s-rise" style={{ maxWidth: "20ch" }}>
+            {s.pickHeading}
+          </h2>
+          <p className="s-note s-rise" style={{ marginTop: 18, maxWidth: "54ch", ["--d" as string]: "80ms" }}>
+            {s.pickNote}
           </p>
 
-          <div
-            className="s-rise"
-            style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBlockStart: 34, ["--d" as string]: "140ms" }}
-          >
-            {PICK.map((p, i) => (
+          {/* سطر البند هو عنوان القسم، وأرقام البنود أزرار حقيقية تغيّره */}
+          <div className="s-clause-line s-rise" style={{ marginTop: "clamp(34px, 4vw, 60px)", ["--d" as string]: "140ms" }}>
+            {picks.map((p, i) => (
               <button
                 key={p.id}
                 type="button"
-                onClick={() => setClause(i)}
+                className="s-clause-pick s-fig"
                 aria-pressed={i === clause}
-                className="s-cut"
-                style={{
-                  padding: "14px 20px",
-                  fontSize: 17,
-                  fontWeight: 600,
-                  fontFamily: "inherit",
-                  cursor: "pointer",
-                  border: 0,
-                  background: i === clause ? "var(--s-accent)" : "var(--s-field-2)",
-                  color: i === clause ? "var(--s-on-accent)" : "var(--s-ink)",
-                  transition: "background-color 160ms ease, transform 160ms cubic-bezier(.22,1,.36,1)"
-                }}
+                onClick={() => setClause(i)}
               >
-                {site.clause} <span className="s-fig">{p.clause}</span>
+                <bdi dir="ltr">{p.clause}</bdi>
               </button>
             ))}
           </div>
 
-          <div
-            style={{
-              marginBlockStart: 40,
-              display: "grid",
-              gap: 8,
-              gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))"
-            }}
-          >
-            {/* شظية من واجهة المنتج نفسها: النص الجديد ثم السابق، كما تُعرض في التطبيق */}
-            <div className="s-ui" data-ui style={{ padding: "clamp(26px, 2.6vw, 40px)" }}>
-              <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--s-accent-text)" }}>
-                {site.newVersion} · <span className="s-fig">{c.docTo}</span>
-              </p>
-              <p style={{ margin: "20px 0 0", fontSize: "var(--s-diff)", lineHeight: 1.85 }}>
-                {c.current.map((seg, i) =>
-                  seg.kind === "add" ? (
-                    <span key={i} className="s-diff-add">
-                      {seg.text}
-                    </span>
-                  ) : (
-                    <span key={i}>{seg.text}</span>
-                  )
-                )}
-              </p>
-            </div>
+          <p className="s-mid s-rise" style={{ marginTop: 22, maxWidth: "40ch", ["--d" as string]: "180ms" }}>
+            {c.title}
+          </p>
 
-            <div className="s-ui" data-ui style={{ padding: "clamp(26px, 2.6vw, 40px)" }}>
-              <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--s-ink-dim)" }}>
-                {site.previousVersion} · <span className="s-fig">{c.docFrom}</span>
-              </p>
-              <p style={{ margin: "20px 0 0", fontSize: "var(--s-diff)", lineHeight: 1.85 }}>
-                {c.previous.length === 0 ? (
-                  <span style={{ color: "var(--s-ink-dim)" }}>{site.noPrevious}</span>
-                ) : (
-                  c.previous.map((seg, i) =>
-                    seg.kind === "del" ? (
-                      <span key={i} className="s-diff-del">
+          {/* الجواب بمقاس الواجهة الحقيقي — هذا جزء من المنتج نفسه */}
+          <div className="s-answer s-rise" data-ui style={{ ["--d" as string]: "220ms" }}>
+            <div className="s-text-row">
+              <div className="s-text-cell" data-kind="after">
+                <p className="s-text-label">
+                  {s.after} · <bdi dir="ltr">{c.docTo}</bdi>
+                </p>
+                <p className="s-text-body">
+                  {c.current.map((seg, i) =>
+                    seg.kind === "add" ? (
+                      <mark key={i} className="s-add">
                         {seg.text}
-                      </span>
+                      </mark>
                     ) : (
                       <span key={i}>{seg.text}</span>
                     )
-                  )
-                )}
-              </p>
-            </div>
-          </div>
-
-          <p className="s-note" style={{ marginBlockStart: 22 }}>
-            {c.title} · {site.citationNote1} <span className="s-fig">{c.effective}</span> · {site.citationNote2}{" "}
-            <span dir="ltr">{c.docTo}</span> {site.citationNote3} <span className="s-fig">{c.page}</span>.
-          </p>
-        </div>
-      </section>
-
-      {/* ---------- الأرقام ---------- */}
-      <section className="s-section">
-        <div className="s-wrap">
-          <h2 className="s-h2 s-rise">{site.countsTitle}</h2>
-          <div
-            style={{
-              marginBlockStart: 56,
-              display: "grid",
-              gap: 48,
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))"
-            }}
-          >
-            {[
-              { n: "47", t: site.count47 },
-              { n: "35", t: site.count35 },
-              { n: "12", t: site.count12 }
-            ].map((s, i) => (
-              <div key={s.n} className="s-rise" style={{ ["--d" as string]: `${i * 90}ms` }}>
-                <p
-                  className="s-fig"
-                  style={{
-                    margin: 0,
-                    fontSize: "clamp(72px, 10.5vw, 158px)",
-                    lineHeight: 0.9,
-                    fontWeight: 500,
-                    color: i === 2 ? "var(--s-accent-text)" : "var(--s-ink)"
-                  }}
-                >
-                  {s.n}
-                </p>
-                <p className="s-body" style={{ marginBlockStart: 14, maxWidth: "24ch" }}>
-                  {s.t}
+                  )}
                 </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ---------- لوحة البنود ---------- */}
-      <section className="s-section" style={{ paddingBlockStart: 0 }}>
-        <div className="s-wrap">
-          <div className="s-tiles s-rise">
-            <div className="s-tile s-tile-head">
-              <h2 className="s-h2" style={{ fontSize: "clamp(27px, 3.2vw, 54px)", lineHeight: 1.08 }}>
-                {site.tilesHead1}
-                <br />
-                {site.tilesHead2}
-              </h2>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
-                {site.tilesBetween} <span dir="ltr">ECC-1:2018</span> {site.tilesAnd}{" "}
-                <span dir="ltr">ECC-2:2024</span>
-              </p>
-            </div>
-            {/**
-             * فقرة واحدة في كل مربّع: المخطط يضع الاسم كبيراً أعلى اليمين حين لا
-             * توجد شعارات. ووجود سطر صغير ثانٍ يجعل نهاية مربّعٍ تسبق عنوان الذي
-             * يليه، فتُقرأ كأنها تسمية فوقية (eyebrow) — وهي ممنوعة.
-             */}
-            {changes.slice(0, 9).map((x) => (
-              <div key={x.id} className="s-tile">
-                <p className="s-tile-title">{x.title}</p>
-              </div>
-            ))}
-            <a className="s-tile" href="/login" style={{ background: "var(--s-field-2)" }}>
-              <p className="s-tile-title">
-                <span className="s-fig">+3</span> {site.tilesMore} ←
-              </p>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ---------- الشريط: المواعيد متكدّسة ---------- */}
-      <section className="s-section s-field-accent">
-        <div className="s-wrap">
-          <h2 className="s-h2 s-rise">{site.wavesTitle}</h2>
-          <p className="s-body s-rise" style={{ marginBlockStart: 20, ["--d" as string]: "80ms" }}>
-            {site.wavesLede}
-          </p>
-          <div
-            className="s-rise"
-            style={{
-              marginBlockStart: 56,
-              display: "grid",
-              gap: 32,
-              gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-              ["--d" as string]: "160ms"
-            }}
-          >
-            {waves.map((d) => {
-              const n = changes.filter((x) => x.effective === d).length;
-              return (
-                <div key={d} style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-                  <span
-                    className="s-iris-mask"
-                    aria-hidden
-                    style={{
-                      width: 26 + n * 7,
-                      height: 26 + n * 7,
-                      background: "var(--s-on-accent)",
-                      flexShrink: 0
-                    }}
-                  />
-                  <div>
-                    <p className="s-fig" style={{ margin: 0, fontSize: 27, fontWeight: 700 }} dir="ltr">
-                      {d}
-                    </p>
-                    <p style={{ margin: "6px 0 0", fontSize: 17, fontWeight: 700 }}>
-                      {n === 1 ? site.waveOne : n === 2 ? site.waveTwo : `${n} ${site.waveMany}`} {site.waveSameDay}
-                    </p>
-                    {/* أسماء البنود نفسها: الشريط يحمل معلومة لا علامة */}
-                    <ul style={{ listStyle: "none", margin: "14px 0 0", padding: 0, display: "grid", gap: 7 }}>
-                      {changes.filter((x) => x.effective === d)
-                        .slice(0, 4)
-                        .map((x) => (
-                          <li key={x.id} style={{ fontSize: 15, lineHeight: 1.45, fontWeight: 500 }}>
-                            {x.title}
-                          </li>
-                        ))}
-                      {n > 4 && (
-                        <li style={{ fontSize: 15, fontWeight: 700 }}>
-                          <span className="s-fig">+{n - 4}</span> {site.waveMore}
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ---------- كيف يعمل ---------- */}
-      <section className="s-section" id="how">
-        <div className="s-wrap">
-          <h2 className="s-h2 s-rise">{site.howTitle}</h2>
-          <p className="s-body s-rise" style={{ marginBlockStart: 20, maxWidth: "58ch", ["--d" as string]: "80ms" }}>
-            {site.howLede}
-          </p>
-
-          {/**
-           * ثلاثة صفوف عريضة لا ثلاث بطاقات متطابقة: صفّ البطاقات هو الشكل الذي
-           * تصل إليه كل صفحة بلا قرار. هنا الاسم كبير على حافة البداية، والشرح
-           * يقابله، والصورة تخصّ الخطوة الأولى وحدها.
-           */}
-          <div style={{ marginBlockStart: 56, display: "grid", gap: 10 }}>
-            <div
-              className="s-rise"
-              style={{
-                background: "var(--s-field)",
-                display: "grid",
-                gap: "clamp(24px, 4vw, 64px)",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                alignItems: "center"
-              }}
-            >
-              <div style={{ padding: "clamp(28px, 3.4vw, 52px)" }}>
-                <p className="s-note" style={{ margin: "0 0 10px" }}>
-                  {site.stage} <span className="s-fig">1</span> {site.stageOf} <span className="s-fig">5</span>
+              <div className="s-text-cell">
+                <p className="s-text-label">
+                  {s.before} · <bdi dir="ltr">{c.docFrom}</bdi>
                 </p>
-                <h3 className="s-h3">{site.stage1}</h3>
-                <p className="s-body" style={{ marginBlockStart: 14 }}>
-                  {site.stage1Body}
+                <p className="s-text-body">
+                  {c.previous.length === 0 ? (
+                    <span style={{ color: "var(--s-ink-dim)" }}>{s.noPrevious}</span>
+                  ) : (
+                    c.previous.map((seg, i) =>
+                      seg.kind === "del" ? (
+                        <mark key={i} className="s-del">
+                          {seg.text}
+                        </mark>
+                      ) : (
+                        <span key={i}>{seg.text}</span>
+                      )
+                    )
+                  )}
                 </p>
               </div>
-              <img
-                src="/site/skyline.jpg"
-                width={1920}
-                height={1080}
-                alt={site.skylineAlt}
-                loading="lazy"
-                decoding="async"
-                style={{ width: "100%", height: "clamp(220px, 26vw, 330px)", objectFit: "cover", display: "block" }}
-              />
             </div>
 
-            {[
-              {
-                h: site.stage2,
-                b: site.stage2Body
-              },
-              {
-                h: site.stage3,
-                b: site.stage3Body
-              },
-              {
-                h: site.stage4,
-                b: site.stage4Body
-              },
-              {
-                h: site.stage5,
-                b: site.stage5Body
-              }
-            ].map((x, i) => (
-              <div
-                key={x.h}
-                className="s-rise"
-                style={{
-                  /* الصفّ الأخير بحقل اللكنة: يكسر تكرار الصفّين، ويُبرز أهمّ دعاوى الصفحة */
-                  background: i === 3 ? "var(--s-accent)" : "var(--s-field)",
-                  color: i === 3 ? "var(--s-on-accent)" : undefined,
-                  padding: "clamp(28px, 3.4vw, 52px)",
-                  display: "grid",
-                  gap: "clamp(16px, 3vw, 56px)",
-                  gridTemplateColumns: i === 3 ? "1fr" : "minmax(150px, 0.4fr) 1fr",
-                  alignItems: "start",
-                  ["--d" as string]: `${(i + 1) * 90}ms`
-                }}
-              >
-                <div>
-                  <p className="s-note" style={{ margin: "0 0 10px", color: i === 3 ? "var(--s-on-accent)" : undefined }}>
-                    {site.stage} <span className="s-fig">{i + 2}</span> {site.stageOf}{" "}
-                    <span className="s-fig">5</span>
-                  </p>
-                  <h3 className={i === 3 ? "s-h2" : "s-h3"}>{x.h}</h3>
-                </div>
-                <p
-                  className={i === 3 ? undefined : "s-body"}
-                  style={i === 3 ? { fontSize: 21, maxWidth: "46ch", lineHeight: 1.55, margin: 0 } : undefined}
-                >
-                  {x.b}
-                </p>
-              </div>
-            ))}
+            <p className="s-small">
+              {s.citationLine} <bdi dir="ltr">{c.docTo}</bdi> · {s.pageWord}{" "}
+              <bdi dir="ltr" className="s-fig">
+                {c.page}
+              </bdi>{" "}
+              · {s.effective}{" "}
+              <bdi dir="ltr" className="s-fig">
+                {c.effective}
+              </bdi>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ---------- الأدوار ---------- */}
-      {/**
-       * تطبيق واحد لخمسة أدوار: كل دور يُعرَف بسؤاله الأول لا بمسمّاه الوظيفي،
-       * لأن المسمّى يختلف بين منشأة وأخرى، والسؤال واحد.
-       */}
-      <section className="s-section" id="roles">
-        <div className="s-wrap">
-          <h2 className="s-h2 s-rise">{site.rolesTitle}</h2>
-          <p className="s-body s-rise" style={{ marginBlockStart: 20, maxWidth: "58ch", ["--d" as string]: "80ms" }}>
-            {site.rolesLede}
-          </p>
-
-          <div
-            style={{
-              marginBlockStart: 56,
-              display: "grid",
-              gap: 10,
-              /* خمسة أعمدة على العريض: بطاقة وحيدة في صفّ ثانٍ تترك مساحة ميتة بعرض أربع بطاقات */
-              gridTemplateColumns: "repeat(auto-fit, minmax(214px, 1fr))"
-            }}
-          >
-            {site.roleCards.map((r, i) => (
-              <div
-                key={r.name}
-                className="s-rise"
-                style={{
-                  background: i === 0 ? "var(--s-accent)" : "var(--s-field)",
-                  color: i === 0 ? "var(--s-on-accent)" : undefined,
-                  padding: "clamp(24px, 2.6vw, 36px)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 14,
-                  minHeight: 232,
-                  ["--d" as string]: `${i * 70}ms`
-                }}
-              >
-                <h3 className="s-h3" style={{ margin: 0 }}>
-                  {r.name}
-                </h3>
-                <p style={{ margin: 0, fontSize: 17, lineHeight: 1.55, fontWeight: 600 }}>{r.question}</p>
-                <p className={i === 0 ? undefined : "s-body"} style={{ margin: "auto 0 0", fontSize: 15, lineHeight: 1.6 }}>
-                  {r.sees}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ---------- العزل ---------- */}
-      <section className="s-section s-field" id="isolation">
-        <div className="s-wrap">
-          <div
-            style={{
-              display: "grid",
-              gap: "clamp(40px, 5vw, 80px)",
-              gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))",
-              alignItems: "center"
-            }}
-          >
-            <div>
-              <p className="s-note s-rise" style={{ margin: "0 0 14px" }}>
-                {site.trustEyebrow}
-              </p>
-              <h2 className="s-h2 s-rise">{site.trustTitle}</h2>
-              <p className="s-body s-rise" style={{ marginBlockStart: 22, ["--d" as string]: "80ms" }}>
-                {site.trustLede1} <span dir="ltr">Qwen2.5 14B</span> {site.trustLede2}
-              </p>
-              <ul
-                className="s-rise"
-                style={{ listStyle: "none", margin: "32px 0 0", padding: 0, display: "grid", gap: 16, ["--d" as string]: "160ms" }}
-              >
-                {site.trustPoints.map((point) => (
-                  <li key={point} style={{ display: "flex", gap: 14 }}>
-                    <IrisBullet />
-                    <span style={{ fontSize: 17, lineHeight: 1.6 }}>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* الصورة تُرى من خلال الفتحة، وتنفتح عليها الحركة التوقيعية */}
-            <figure style={{ margin: 0 }}>
-              <div className="s-shutter s-iris-mask" style={{ overflow: "hidden" }}>
-                <img
-                  src="/site/datacenter.jpg"
-                  width={1920}
-                  height={1280}
-                  alt={site.datacenterAlt}
-                  loading="lazy"
-                  decoding="async"
-                  style={{ width: "100%", height: "clamp(300px, 38vw, 480px)", objectFit: "cover", display: "block" }}
-                />
-              </div>
-              <figcaption className="s-note" style={{ marginBlockStart: 14 }}>
-                {site.datacenterCaption}
-              </figcaption>
-            </figure>
-          </div>
-        </div>
-      </section>
-
-      {/* ---------- الأصول المتأثرة ---------- */}
-      <section className="s-section">
-        <div className="s-wrap">
-          <div
-            style={{
-              display: "grid",
-              gap: "clamp(40px, 5vw, 80px)",
-              gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))",
-              alignItems: "center"
-            }}
-          >
-            <figure style={{ margin: 0, order: 1 }}>
-              <div className="s-iris-mask" style={{ overflow: "hidden" }}>
-                <img
-                  src="/site/board.png"
-                  width={3000}
-                  height={1600}
-                  alt={site.boardAlt}
-                  loading="lazy"
-                  decoding="async"
-                  style={{
-                    width: "100%",
-                    height: "clamp(280px, 34vw, 420px)",
-                    objectFit: "cover",
-                    objectPosition: "75% 50%",
-                    display: "block"
-                  }}
-                />
-              </div>
-              <figcaption className="s-note" style={{ marginBlockStart: 14 }}>
-                {site.boardCaption}
-              </figcaption>
-            </figure>
-            <div>
-              <h2 className="s-h2 s-rise">{site.assetsTitle}</h2>
-              <p className="s-body s-rise" style={{ marginBlockStart: 22, ["--d" as string]: "80ms" }}>
-                {site.assetsBody}
-              </p>
-              <p className="s-note s-rise" style={{ marginBlockStart: 20, ["--d" as string]: "140ms" }}>
-                {site.assetsNote1} <span className="s-fig">2-3-3-1</span>
-                {site.assetsNote2}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ---------- الدعوة ---------- */}
-      <section className="s-section" style={{ position: "relative", overflow: "hidden" }}>
+      {/* ---------- صورة واحدة كبيرة بين قسمين من النص ---------- */}
+      <section aria-hidden style={{ height: "clamp(320px, 54svh, 620px)", overflow: "hidden" }}>
         <img
-          src="/site/riyadh.jpg"
+          src={PICTURES.skyline}
           width={1920}
-          height={1280}
-          alt={site.riyadhAlt}
+          height={1080}
+          alt=""
           loading="lazy"
           decoding="async"
-          className="s-drift"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            opacity: 0.4,
-            zIndex: 0
-          }}
+          className="s-shot s-drift"
         />
-        <div className="s-wrap" style={{ position: "relative", zIndex: 1 }}>
-          <h2 className="s-display s-rise" style={{ maxWidth: "16ch" }}>
-            {site.ctaTitle}
-          </h2>
-          <p className="s-lede s-rise" style={{ marginBlockStart: 26, ["--d" as string]: "80ms" }}>
-            {site.ctaLede}
-          </p>
-          <div
-            className="s-rise"
-            style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBlockStart: 40, ["--d" as string]: "160ms" }}
-          >
-            <a className="s-btn s-cut" href="/login">
-              {site.heroCta}
-            </a>
-            <a className="s-btn-quiet s-cut" href={DEMO_MAIL}>
-              {site.ctaQuiet}
-            </a>
+      </section>
+
+      {/* ---------- الإجمالي وإيصاله ---------- */}
+      <section className="s-section s-field">
+        <div className="s-wrap s-total-row">
+          <div>
+            <h2 className="s-big s-rise" style={{ maxWidth: "18ch" }}>
+              {s.receiptHeading}
+            </h2>
+            <p className="s-note s-rise" style={{ marginTop: 16, maxWidth: "46ch", ["--d" as string]: "80ms" }}>
+              {s.receiptNote}
+            </p>
+            <p className="s-total s-fig s-rise" style={{ marginTop: "clamp(48px, 8vw, 150px)", ["--d" as string]: "140ms" }}>
+              <bdi dir="ltr">{kept}</bdi>
+            </p>
+            <p className="s-body s-rise" style={{ maxWidth: "30ch", ["--d" as string]: "200ms" }}>
+              {s.receiptTotalCaption}
+            </p>
+          </div>
+
+          {/* الإيصال: قيمه تجمع فعلاً إلى الرقم الكبير */}
+          <div className="s-slip s-rise" style={{ ["--d" as string]: "260ms" }}>
+            <p className="s-slip-title">{s.receiptSlipTitle}</p>
+
+            <p className="s-slip-group">{s.receiptGroupRaw}</p>
+            <Row label={s.receiptRaw} value="47" />
+
+            <p className="s-slip-group">{s.receiptGroupDropped}</p>
+            <Row label={s.receiptNumbering} value="18" />
+            <Row label={s.receiptFormat} value="11" />
+            <Row label={s.receiptWording} value="6" />
+
+            <p className="s-slip-group">{s.receiptGroupKept}</p>
+            <Row label={s.receiptCritical} value={String(byPriority("critical"))} />
+            <Row label={s.receiptStrategic} value={String(byPriority("strategic"))} />
+            <Row label={s.receiptQuick} value={String(byPriority("quick"))} />
+            <Row label={s.receiptWatch} value={String(byPriority("watch"))} />
+
+            <p className="s-slip-total">
+              <span>{s.receiptTotalRow}</span>
+              <bdi dir="ltr" className="s-fig">
+                {kept}
+              </bdi>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ---------- التذييل ---------- */}
-      <footer style={{ background: "var(--s-field)", paddingBlock: "clamp(60px, 8vw, 110px) 40px" }}>
+      {/* ---------- المراحل: سطر لكل مرحلة، والأخيرة توقّف ---------- */}
+      <section className="s-section" id="how">
         <div className="s-wrap">
-          <p
-            style={{
-              margin: 0,
-              fontSize: "clamp(56px, 15vw, 210px)",
-              lineHeight: 0.84,
-              fontWeight: 700,
-              letterSpacing: "-0.03em"
-            }}
-          >
-            Xposure
+          <h2 className="s-mid s-rise" style={{ marginBottom: "clamp(34px, 4vw, 60px)", color: "var(--s-ink-dim)" }}>
+            {s.stagesHeading}
+          </h2>
+          <div className="s-steps">
+            {stages.map((line, i) => (
+              <p key={line} className="s-step s-rise" style={{ ["--d" as string]: `${i * 80}ms` }}>
+                {line}
+              </p>
+            ))}
+          </div>
+          <p className="s-body s-rise" style={{ marginTop: "clamp(44px, 6vw, 96px)", maxWidth: "62ch", color: "var(--s-ink-dim)" }}>
+            {s.stagesFoot}
           </p>
-          <div
-            style={{
-              marginBlockStart: 48,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 28,
-              justifyContent: "space-between",
-              alignItems: "flex-end"
-            }}
-          >
-            <p className="s-body" style={{ maxWidth: "40ch" }}>
-              {site.footerLine}{" "}
-              <a href="/login" style={{ color: "var(--s-accent-text)", fontWeight: 600 }}>
-                {site.footerEnter}
-              </a>
-            </p>
-            <p className="s-note" style={{ maxWidth: "62ch" }}>
-              {site.credits}{" "}
-              <a href="https://commons.wikimedia.org/wiki/File:Cern_datacenter.jpg">«Cern datacenter»</a>{" "}
-              {site.creditsBy} Hugovanmeijeren,{" "}
-              <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY-SA 3.0</a>;{" "}
-              <a href="https://commons.wikimedia.org/wiki/File:King_Abdullah_Financial_District_(KAFD),_Riyadh,_Saudi_Arabia,_2026.jpg">
-                «King Abdullah Financial District, Riyadh»
-              </a>
-              , <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>;{" "}
-              <a href="https://commons.wikimedia.org/wiki/File:PCB_design_and_realisation_smt_and_through_hole.png">
-                «PCB design and realisation»
-              </a>{" "}
-              {site.creditsBy} Mike1024,{" "}
-              <a href="https://creativecommons.org/publicdomain/mark/1.0/">{site.creditsPublicDomain}</a>;{" "}
-              <a href="https://commons.wikimedia.org/wiki/File:Riyadh_Skyline.jpg">«Riyadh Skyline»</a>{" "}
-              {site.creditsBy} B.alotaby, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>,{" "}
-              {site.creditsVia}
+        </div>
+      </section>
+
+      {/* ---------- الأصول التي تحكمها هذه الضوابط ---------- */}
+      <section aria-hidden style={{ height: "clamp(300px, 48svh, 560px)", overflow: "hidden" }}>
+        <img
+          src={PICTURES.board}
+          width={3000}
+          height={1600}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="s-shot"
+          style={{ objectPosition: "72% 50%" }}
+        />
+      </section>
+
+      {/* ---------- الأدوار: عنوان مثبّت وصفوف تمرّ ---------- */}
+      <section className="s-section s-field" id="roles">
+        <div className="s-wrap s-roles">
+          <div className="s-roles-head">
+            <h2 className="s-big s-rise" style={{ maxWidth: "12ch" }}>
+              {s.rolesHeading}
+            </h2>
+            <p className="s-note s-rise" style={{ marginTop: 16, maxWidth: "34ch", ["--d" as string]: "80ms" }}>
+              {s.rolesNote}
             </p>
           </div>
+
+          <div>
+            {t.site.roleCards.map((r, i) => (
+              <div key={r.name} className="s-role s-rise" data-lit={i === 0 ? "true" : "false"} style={{ ["--d" as string]: `${i * 60}ms` }}>
+                <h3 className="s-role-name">{r.name}</h3>
+                <p className="s-role-q">{r.question}</p>
+                <p className="s-role-sees">{r.sees}</p>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
+
+      {/* ---------- أين يعمل ---------- */}
+      <section aria-hidden style={{ height: "clamp(280px, 44svh, 520px)", overflow: "hidden" }}>
+        <img
+          src={PICTURES.datacenter}
+          width={1920}
+          height={1280}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="s-shot"
+        />
+      </section>
+
+      {/* ---------- العزل: جملة واحدة كبيرة، عنصر مضيء واحد في كل لحظة ---------- */}
+      <section className="s-section" id="isolation">
+        <div className="s-wrap">
+          <p className="s-run-on s-rise">
+            <strong>{s.trustOpening}</strong>{" "}
+            {guarantees.map((g, i) => (
+              <span key={g} data-lit={i === lit ? "true" : "false"}>
+                {g.split(":")[0]}
+                {i < guarantees.length - 1 ? "، " : " "}
+              </span>
+            ))}
+            <strong>{s.trustClose}</strong>
+          </p>
+
+        </div>
+      </section>
+
+      {/* ---------- المنشأة التي تبقى البيانات داخلها ---------- */}
+      <section aria-hidden style={{ height: "clamp(260px, 40svh, 480px)", overflow: "hidden" }}>
+        <img
+          src={PICTURES.kafd}
+          width={1920}
+          height={1280}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="s-shot"
+          style={{ objectPosition: "50% 62%" }}
+        />
+      </section>
+
+      {/* ---------- الدعوة: الشريط كلّه زر واحد ---------- */}
+      <a className="s-cta" href="/login" id="enter">
+        <span className="s-cta-top">
+          <span className="s-note" style={{ color: "inherit", maxWidth: "34ch" }}>
+            {s.ctaNote}
+          </span>
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M7 17L17 7M17 7H8M17 7v9" />
+          </svg>
+        </span>
+        <span className="s-cta-word">{s.ctaWord}</span>
+      </a>
+
+      {/* ---------- التذييل: دعوة فوق اسم مقصوص ---------- */}
+      <footer className="s-footer">
+        <div className="s-wrap">
+          <div className="s-footer-top">
+            <div>
+              <p className="s-big s-rise" style={{ maxWidth: "14ch" }}>
+                {s.footerInvite}
+              </p>
+              <a
+                className="s-btn s-rise"
+                style={{ marginTop: 28, ["--d" as string]: "80ms" }}
+                href={
+                  "mailto:demo@xposure.local?subject=" +
+                  encodeURIComponent(t.site.mailSubject) +
+                  "&body=" +
+                  encodeURIComponent(t.site.mailBody)
+                }
+              >
+                {s.footerAction}
+              </a>
+            </div>
+
+            <div className="s-footer-links">
+              <a href="/login">{s.navEnter}</a>
+              <a href="#clause">{s.navCompare}</a>
+              <a href="#how">{s.navHow}</a>
+              <a href="#isolation">{s.navTrust}</a>
+            </div>
+          </div>
+
+          <p className="s-credits">
+            <span>{s.credits}</span>
+            <span>
+              <a href="https://commons.wikimedia.org/w/index.php?curid=169491206">
+                “Microscope close-up of blown step-down regulator on laptop PCB”
+              </a>{" "}
+              {s.creditsBy} Profpcde, <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>;
+            </span>
+            <span>
+              <a href="https://wordpress.org/photos/photo/61563ef3d9/">“A system administrator’s workstation”</a>{" "}
+              {s.creditsBy} Javier Salinas, <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>;
+            </span>
+            <span>
+              <a href="https://commons.wikimedia.org/wiki/File:Riyadh_Skyline.jpg">“Riyadh Skyline”</a> {s.creditsBy}{" "}
+              B.alotaby, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>;
+            </span>
+            <span>
+              <a href="https://commons.wikimedia.org/wiki/File:PCB_design_and_realisation_smt_and_through_hole.png">
+                “PCB design and realisation”
+              </a>{" "}
+              {s.creditsBy} Mike1024,{" "}
+              <a href="https://creativecommons.org/publicdomain/mark/1.0/">public domain</a>;
+            </span>
+            <span>
+              <a href="https://commons.wikimedia.org/wiki/File:Cern_datacenter.jpg">“Cern datacenter”</a> {s.creditsBy}{" "}
+              Hugovanmeijeren, <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY-SA 3.0</a>;
+            </span>
+            <span>
+              <a href="https://commons.wikimedia.org/wiki/File:King_Abdullah_Financial_District_(KAFD),_Riyadh,_Saudi_Arabia,_2026.jpg">
+                “King Abdullah Financial District, Riyadh”
+              </a>
+              , <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a> — {s.creditsVia} Wikimedia
+              Commons.
+            </span>
+          </p>
+        </div>
+
+        <p className="s-wordmark">Xposure</p>
       </footer>
     </div>
+  );
+}
+
+/** صفّ في الإيصال: وصف، ثم نقاط قائدة، ثم قيمة بأرقام جدولية. */
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="s-slip-row">
+      <span>{label}</span>
+      <span className="s-leader" aria-hidden>
+        ····································································
+      </span>
+      <bdi dir="ltr" className="s-slip-value s-fig">
+        {value}
+      </bdi>
+    </p>
   );
 }

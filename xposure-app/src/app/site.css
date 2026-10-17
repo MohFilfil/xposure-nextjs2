@@ -1,31 +1,39 @@
 /**
- * الصفحة التعريفية العامة. ألوانها وقياساتها خاصة بها ولا تُشتق من tokens التطبيق:
- * التطبيق يُقرأ ساعاتٍ ويحتاج أسطحاً هادئة ومتدرّجة، وهذه الصفحة تُقرأ دقيقةً واحدة
- * وتحتاج مساحات لون مصمتة وحجماً. ولذلك هنا: لا تدرّجات، ولا ظلال على ساكن،
- * ولا خطوط شعرية فاصلة — الفصل بحقل لون أو بقفزة حجم.
+ * الصفحة التعريفية العامة — الاتجاه: «النوع ولا شيء غيره» (type-only-statement).
  *
- * المحرّك البصري واحد: فتحة العدسة (aperture) التي يعنيها اسم المنتج.
- * تظهر هيئةً عملاقة في الصدارة، وقناعاً لكل صورة، وشكلاً لزر الإجراء، ونقطةً
- * أمام عناصر القوائم. شكل واحد بأربعة مقاسات — لا شكل ثانٍ معه.
+ * الفكرة: نصّ الضابط كما نشرته الجهة هو مادة الصفحة. الشاشة الأولى كلمات وحدها،
+ * والصور تأتي بعدها كبيرة وقليلة. لا تدرّجات، ولا ظلال على ساكن، ولا خيوط فاصلة،
+ * ولا زجاج، ولا شارات فوق العناوين: الفصل بحقل لون أو بقفزة حجم.
+ *
+ * البنفسجي (brand) لون هوية مسجّل في design-system/tokens.json، وهنا هبط إلى
+ * نسبته الصحيحة: الإجراء وشريط الدعوة وحدهما — لا حقول كاملة كما كان.
  */
 
 .site {
-  /* أرض واحدة، حبر واحد، لكنة واحدة. الحقول خطوات نغمة من الأرض نفسها. */
+  /* أرض واحدة، حبر واحد، لكنة واحدة، وخطوة نغمة واحدة بين الأسطح */
   --s-ground: #07090f;
-  --s-field: #111827;
-  --s-field-2: #1b2335;
+  --s-field: #10141f;
   --s-ink: #f4f6fa;
-  --s-ink-dim: #aab3c4;
-  --s-diff: 20px;
-  --s-accent: #6366f1; /* taste-skill-ignore: لون هوية مسجّل في design-system/tokens.json، لا خيار أسلوبي */
-  /* اللكنة كخلفية تكفي، وككتابة ترسب تحت 4.5:1 على الأرض الداكنة، فلها درجة أفتح */
-  --s-accent-text: #8b8df7;
-  --s-on-accent: #02030a; /* 4.6:1 فوق اللكنة؛ #060811 كان يرسب عند 4.49:1 */
-  --s-add: #34d399;
-  --s-del: #f87171;
+  --s-ink-dim: #a8b1c2;
+  --s-accent: #6366f1; /* taste-skill-ignore: لون هوية مسجّل في tokens.json، لا خيار أسلوبي */
+  /* درجة الزر أغمق من اللكنة: النص الأبيض على #6366f1 يقف عند 4.1:1 */
+  --s-accent-deep: #4a4de0;
+  --s-on-accent: #05060c;
+  --s-paper: #e3e2de;
+  --s-paper-ink: #15171c;
+  --s-add: #2f9e6b;
+  --s-del: #c2545a;
 
-  --s-margin: clamp(16px, 4vw, 72px);
-  --s-gap: clamp(72px, 8vw, 132px);
+  /* خمس درجات لا سادسة */
+  --s-giant: clamp(104px, 25vw, 348px);
+  --s-display: clamp(52px, 10.6vw, 126px);
+  --s-big: clamp(26px, 4.4vw, 64px);
+  --s-mid: clamp(20px, 2.2vw, 30px);
+  --s-body: 18px;
+  --s-small: 15px;
+
+  --s-margin: clamp(16px, 3.2vw, 56px);
+  --s-gap: clamp(104px, 13vw, 200px);
 
   position: relative;
   z-index: 0;
@@ -33,10 +41,12 @@
   color: var(--s-ink);
   overflow-x: clip;
   font-family: var(--font-body);
+  font-size: var(--s-body);
+  line-height: 1.55;
   letter-spacing: 0;
 }
 
-/* هالات التطبيق لا تمتد إلى هذه الصفحة: الأرض هنا مصمتة بلا استثناء */
+/* هالات التطبيق لا تمتد إلى هنا: الأرض مصمتة بلا استثناء */
 .site::after {
   content: "";
   position: fixed;
@@ -48,60 +58,85 @@
 
 .site ::selection {
   background: var(--s-accent);
-  color: var(--s-on-accent);
+  color: var(--s-ink);
 }
 
-/* ---------- الطباعة: خمس درجات لا سادس ---------- */
+.site a {
+  color: inherit;
+}
 
+/* ---------- الطباعة ---------- */
+
+/**
+ * التتبّع السالب للاتينية وحدها. العربية خط متصل: أي تضييق عند 126px يُلصق الحروف
+ * ببعضها ويكسر الوصل — وهو أول ما يفضح صفحة عربية «مصمَّمة» بقواعد لاتينية.
+ */
 .s-display {
-  font-size: clamp(34px, 5vw, 64px);
-  line-height: 0.98;
-  font-weight: 700;
-  letter-spacing: -0.015em;
   margin: 0;
+  font-size: var(--s-display);
+  line-height: 0.94;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
-.s-h2 {
-  font-size: clamp(30px, 4vw, 54px);
-  line-height: 1.04;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin: 0;
+.site:dir(rtl) .s-display,
+.site:dir(rtl) .s-big,
+.site:dir(rtl) .s-mid,
+.site:dir(rtl) .s-stair q,
+.site:dir(rtl) .s-step,
+.site:dir(rtl) .s-run-on,
+.site:dir(rtl) .s-total,
+.site:dir(rtl) .s-cta-word {
+  letter-spacing: 0;
 }
 
-.s-h3 {
-  font-size: 27px;
-  line-height: 1.22;
+.s-big {
+  margin: 0;
+  font-size: var(--s-big);
+  line-height: 1.02;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.s-mid {
+  margin: 0;
+  font-size: var(--s-mid);
+  line-height: 1.3;
   font-weight: 600;
-  margin: 0;
-}
-
-.s-lede {
-  font-size: 21px;
-  line-height: 1.55;
-  margin: 0;
-  max-width: 54ch;
+  letter-spacing: -0.01em;
 }
 
 .s-body {
-  font-size: 17px;
-  line-height: 1.62;
   margin: 0;
-  max-width: 62ch;
+  font-size: var(--s-body);
+  line-height: 1.6;
 }
 
-/* النص الجاري بالحبر الكامل؛ الرمادي للملاحظات الثانوية وحدها */
-.s-note {
-  font-size: 15px;
+.s-small {
+  margin: 0;
+  font-size: var(--s-small);
   line-height: 1.5;
   color: var(--s-ink-dim);
-  margin: 0;
 }
 
-/* ---------- الشبكة ---------- */
+/* نص ثانوي بحجم النص لا بحجم التسمية: فقرة كاملة بـ15px تُقرأ كحاشية */
+.s-note {
+  margin: 0;
+  font-size: var(--s-body);
+  line-height: 1.6;
+  color: var(--s-ink-dim);
+}
+
+/* الأرقام بأرقام جدولية من خط النص نفسه — لا خط أحادي المسافة في الصفحة كلها */
+.s-fig {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* ---------- الهيكل ---------- */
 
 .s-wrap {
-  max-width: 1320px;
+  max-width: 1600px;
   margin-inline: auto;
   padding-inline: var(--s-margin);
 }
@@ -110,377 +145,663 @@
   padding-block: var(--s-gap);
 }
 
-/* ---------- المحرّك: فتحة العدسة ---------- */
-
-/**
- * القناع السداسي هو فتحة العدسة نفسها. كل صورة في الصفحة تُرى من خلاله،
- * فتصير الصورة «ما تكشفه الفتحة» لا مستطيلاً موضوعاً في تخطيط.
- */
-.s-iris-mask {
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+.s-field {
+  background: var(--s-field);
 }
 
-/** الزر مقصوص بزاويتين من هندسة الشفرة نفسها — لا زوايا مستديرة في الصفحة. */
-.s-cut {
-  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
-}
-
-.s-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 18px 30px;
-  font-size: 17px;
-  font-weight: 700;
-  font-family: inherit;
-  background: var(--s-accent);
-  color: var(--s-on-accent);
-  border: 0;
-  cursor: pointer;
-  text-decoration: none;
-  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease;
-}
-.s-btn:hover {
-  background: #7c7ff5;
-  transform: translateY(-2px);
-}
-.s-btn:active {
-  transform: translateY(0);
-}
-
-.s-btn-quiet {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 18px 26px;
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--s-ink);
-  background: var(--s-field-2);
-  border: 0;
-  cursor: pointer;
-  text-decoration: none;
-  font-family: inherit;
-  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease;
-}
-.s-btn-quiet:hover {
-  background: #26314a;
-  transform: translateY(-2px);
-}
-
-.site a {
-  color: inherit;
-}
-
-/**
- * الأزرار روابط، و.site a أعلى تخصيصاً من .s-btn فكانت ترث حبر الصفحة الفاتح
- * فوق أرضية اللكنة — نصٌّ فاتح على بنفسجي عند 4.1:1. اللون يُعاد هنا صراحةً.
- */
-.site a.s-btn {
-  color: var(--s-on-accent);
-}
-.site a.s-btn-quiet {
-  color: var(--s-ink);
-}
-
-.site :focus-visible {
-  outline: 3px solid var(--s-accent);
-  outline-offset: 3px;
-}
-
-/* ---------- الصدارة ---------- */
-
-.s-hero {
-  position: relative;
-  min-height: 92svh;
-  display: flex;
-  align-items: center;
-  padding-block: clamp(80px, 12vh, 150px);
-}
-
-/**
- * الهيئة العملاقة تدخل من جهة النهاية (اليسار في واجهة عربية) وتقصّها حافة
- * الشاشة من ثلاث جهات، فيبقى للعنوان نصف الشاشة من جهة البداية.
- */
-.s-hero-iris {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-end: -19%;
-  translate: 0 -50%;
-  width: min(94vh, 772px);
-  aspect-ratio: 1;
-  color: var(--s-accent);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.s-hero-text {
-  position: relative;
-  z-index: 1;
-  /* بالبكسل لا بـ ch: وحدة ch تقاس بخط الحاوية لا بخط العنوان الذي بداخلها */
-  max-width: min(620px, 53%);
-}
-
-@media (max-width: 900px) {
-  .s-hero {
-    min-height: auto;
-    padding-block: 72px 0;
-    /* الصدارة عمود على الهاتف: بدون ذلك تبقى الهيئة عنصراً مرناً بجانب النص */
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .s-hero-text {
-    max-width: none;
-  }
-  .s-hero-iris {
-    position: relative;
-    /* inset اختصار فيزيائي ولا يصفّر inset-inline-end المنطقي، فتبقى الهيئة مزاحة فوق النص */
-    inset: auto;
-    inset-inline-end: auto;
-    inset-inline-start: auto;
-    inset-block-start: auto;
-    translate: none;
-    /* المخطط يضع الهيئة أسفل العنوان على الهاتف، مقصوصةً بالحواف الثلاث */
-    order: 2;
-    /**
-     * z-index: auto لا 0 — عنصر موضوع بـ z-index: 0 يُنشئ سياق تراصّ ويُرسم فوق
-     * الأقسام غير الموضوعة التي تليه، فيغطّي عنوان القسم التالي. والهامش السالب
-     * أسفلها كان يسحب القسم التالي فوقها فيضاعف المشكلة.
-     */
-    z-index: auto;
-    width: 132vw;
-    margin-inline-start: -22vw;
-    margin-block-start: 40px;
-  }
-}
-
-/* ---------- شريط التنقل: شريط عادي بلا زجاج ولا حبّة عائمة ---------- */
+/* ---------- الترويسة ---------- */
 
 .s-nav {
-  position: relative;
-  z-index: 2;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 24px;
-  padding-block: 26px;
+  padding-block: 26px 0;
+  flex: 0 0 auto;
 }
 
 .s-nav-links {
   display: flex;
-  align-items: center;
-  gap: 30px;
-  font-size: 17px;
-}
-.s-nav-links a {
-  text-decoration: none;
-}
-.s-nav-links a:hover {
-  color: var(--s-accent);
+  align-items: baseline;
+  gap: clamp(14px, 2vw, 32px);
+  font-size: var(--s-small);
 }
 
-@media (max-width: 760px) {
-  .s-nav-links {
-    gap: 18px;
-    font-size: 15px;
-  }
+.s-nav-links a,
+.s-nav-links button {
+  color: var(--s-ink-dim);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: color 160ms ease-out;
+}
+
+.s-nav-links a:hover,
+.s-nav-links button:hover,
+.s-nav-links a:focus-visible,
+.s-nav-links button:focus-visible {
+  color: var(--s-ink);
+}
+
+@media (max-width: 720px) {
   .s-nav-hide {
     display: none;
   }
 }
 
-/* ---------- الحقول ---------- */
+/* ---------- الصدارة: جملة وحدها ---------- */
 
-.s-field {
-  background: var(--s-field);
+/* شاشة أولى واحدة: الاسم أعلاها، الجملة في ثلثيها الأعلى، والجملة المساندة والفعل عند قاعها */
+.s-hero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-block: 0 clamp(28px, 5vh, 56px);
 }
-.s-field-accent {
+
+/* الثلثان الأعلى: الجملة تبدأ تحت الترويسة مباشرة، والفراغ كلّه تحتها لا حولها */
+.s-hero-statement {
+  margin-block: clamp(30px, 7vh, 96px) auto;
+  max-width: 18ch;
+}
+
+.s-hero-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+/* ---------- الفعل: شكل واحد لكل الأزرار في الصفحة ---------- */
+
+.s-btn {
+  display: inline-block;
+  background: var(--s-accent-deep);
+  color: var(--s-ink);
+  font-size: var(--s-body);
+  font-weight: 700;
+  padding: 16px 30px;
+  text-decoration: none;
+  border: 0;
+  cursor: pointer;
+  transition: background-color 160ms ease-out, transform 160ms ease-out;
+}
+
+.s-btn:hover,
+.s-btn:focus-visible {
   background: var(--s-accent);
-  color: var(--s-on-accent);
 }
 
-/* ---------- لوح الواجهة الحقيقية (data-ui) ---------- */
-
-/**
- * شظايا من واجهة المنتج نفسها، مبنية بـ HTML بمقاسها الحقيقي وبمحتواها الحقيقي.
- * تحتفظ بحدّها لأنها اقتباس من واجهة قائمة، لا عنصر من عناصر هذه الصفحة.
- * ولا خط أحادي فيها ولا خارجها: رقم كبير بخط أحادي يُقرأ زيّاً لا قياساً،
- * والأرقام الجدولية (s-fig) تكفي للمحاذاة في خط النص نفسه.
- */
-.s-ui {
-  background: #0e1422;
-  border: 1px solid #242d42; /* taste-skill-ignore: حدّ شظية الواجهة data-ui، من أعراف التطبيق المقتبَس */
-  font-family: var(--font-body);
+.s-btn:active {
+  transform: translateY(1px);
 }
 
-/**
- * الأرقام خارج شظايا الواجهة: خط النص نفسه بخانات متساوية العرض.
- * ولا تنكسر: تاريخ ينقسم إلى «2026-12-» و«31» على سطرين يُقرأ رقمين لا تاريخاً.
- */
-.s-fig {
-  font-variant-numeric: tabular-nums lining-nums;
-  font-feature-settings: "tnum" 1, "lnum" 1;
-  white-space: nowrap;
+.s-btn-plain {
+  display: inline-block;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--s-ink-dim);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 160ms ease-out;
 }
 
-.s-diff-add {
-  background: color-mix(in srgb, var(--s-add) 20%, transparent);
-  color: var(--s-add);
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-  padding: 2px 4px;
-  font-weight: 500;
+.s-btn-plain:hover,
+.s-btn-plain:focus-visible,
+.s-btn-plain[aria-pressed="true"] {
+  color: var(--s-ink);
 }
 
-.s-diff-del {
-  background: color-mix(in srgb, var(--s-del) 20%, transparent);
-  color: var(--s-del);
+.site :focus-visible {
+  outline: 2px solid var(--s-accent);
+  outline-offset: 3px;
+}
+
+/* ---------- المشكلة: سلّم من خمسة أسئلة ---------- */
+
+.s-stairs {
+  display: grid;
+  gap: clamp(26px, 3.4vw, 46px);
+}
+
+.s-stair {
+  max-width: 44ch;
+}
+
+.s-stair q {
+  display: block;
+  font-size: clamp(21px, 4.2vw, 64px);
+  line-height: 1.04;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  quotes: none;
+  text-wrap: balance;
+}
+
+.s-stair p {
+  margin: 10px 0 0;
+  font-size: var(--s-body);
+  line-height: 1.6;
+  color: var(--s-ink-dim);
+}
+
+/* السلّم ينزل نحو جهة النهاية: الإزاحة منطقية فتنقلب مع اللغة وحدها */
+.s-stair:nth-child(1) { margin-inline-start: 0; }
+.s-stair:nth-child(2) { margin-inline-start: 6vw; }
+.s-stair:nth-child(3) { margin-inline-start: 12vw; }
+.s-stair:nth-child(4) { margin-inline-start: 18vw; }
+.s-stair:nth-child(5) { margin-inline-start: 24vw; }
+
+@media (max-width: 720px) {
+  .s-stair:nth-child(1) { margin-inline-start: 0; }
+  .s-stair:nth-child(2) { margin-inline-start: 5vw; }
+  .s-stair:nth-child(3) { margin-inline-start: 10vw; }
+  .s-stair:nth-child(4) { margin-inline-start: 15vw; }
+  .s-stair:nth-child(5) { margin-inline-start: 20vw; }
+}
+
+/* ---------- الصور ---------- */
+
+.s-shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.s-figure {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+/* الصورة المتحرّكة الوحيدة: انجراف بطيء لا يتوقّف، ويُلغى مع تقليل الحركة */
+.s-drift {
+  animation: s-drift 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes s-drift {
+  from { transform: scale(1.04) translate3d(0, 0, 0); }
+  to { transform: scale(1.12) translate3d(0, -2.2%, 0); }
+}
+
+/* ---------- البند: الشيء الحيّ ---------- */
+
+.s-clause-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: clamp(10px, 1.4vw, 22px);
+}
+
+.s-clause-pick {
+  font-size: var(--s-big);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+  color: #6b748a;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: color 160ms ease-out;
+}
+
+.s-clause-pick:hover,
+.s-clause-pick:focus-visible {
+  color: var(--s-ink-dim);
+}
+
+.s-clause-pick[aria-pressed="true"] {
+  color: var(--s-ink);
+}
+
+/* الجواب بمقاس الواجهة الحقيقي، لا بمقاس الصفحة */
+.s-answer {
+  margin-top: clamp(26px, 3vw, 44px);
+  display: grid;
+  gap: 10px;
+  max-width: 1100px;
+}
+
+.s-text-row {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@media (max-width: 860px) {
+  .s-text-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.s-text-cell {
+  background: var(--s-field);
+  padding: clamp(18px, 2vw, 28px);
+}
+
+.s-text-cell[data-kind="after"] {
+  background: #141a28;
+}
+
+.s-text-label {
+  font-size: var(--s-small);
+  color: var(--s-ink-dim);
+  margin: 0 0 12px;
+}
+
+.s-text-body {
+  margin: 0;
+  font-size: var(--s-body);
+  line-height: 1.75;
+}
+
+.s-add {
+  background: rgba(47, 158, 107, 0.22);
+  color: #7ee0b0;
+  padding: 1px 3px;
+}
+
+.s-del {
+  background: rgba(194, 84, 90, 0.2);
+  color: #ef9ba0;
+  padding: 1px 3px;
   text-decoration: line-through;
   text-decoration-thickness: 2px;
-  padding: 2px 4px;
-  font-weight: 500;
 }
 
-/* ---------- لوحة البنود ---------- */
+/* ---------- الإجمالي وإيصاله ---------- */
 
-/**
- * اسم البند يتقلّص على الشاشات الضيّقة: فوق 24px يُعدّ عنواناً فيلزمه سطران،
- * وأسماء البنود التنظيمية أطول من أن تُختصر — فالحجم هو ما ينزل، لا النص.
- */
-.s-tile-title {
+.s-total-row {
+  display: grid;
+  gap: clamp(32px, 5vw, 80px);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  align-items: end;
+}
+
+@media (max-width: 980px) {
+  .s-total-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.s-total {
+  font-size: var(--s-giant);
+  line-height: 0.78;
+  font-weight: 700;
+  letter-spacing: -0.045em;
   margin: 0;
-  font-size: clamp(18px, 2.2vw, 27px);
-  line-height: 1.24;
+}
+
+/* الإيصال: ورق فعلي بحافة مسنّنة، لا بطاقة بحدّ رمادي */
+.s-slip {
+  background: var(--s-paper);
+  color: var(--s-paper-ink);
+  padding: 28px 26px 40px;
+  clip-path: polygon(
+    0 0, 100% 0, 100% calc(100% - 12px),
+    96% 100%, 92% calc(100% - 12px), 88% 100%, 84% calc(100% - 12px), 80% 100%,
+    76% calc(100% - 12px), 72% 100%, 68% calc(100% - 12px), 64% 100%, 60% calc(100% - 12px),
+    56% 100%, 52% calc(100% - 12px), 48% 100%, 44% calc(100% - 12px), 40% 100%,
+    36% calc(100% - 12px), 32% 100%, 28% calc(100% - 12px), 24% 100%, 20% calc(100% - 12px),
+    16% 100%, 12% calc(100% - 12px), 8% 100%, 4% calc(100% - 12px), 0 100%
+  );
+}
+
+.s-slip-title {
+  margin: 0 0 18px;
+  font-size: var(--s-body);
   font-weight: 700;
 }
 
-.s-tiles {
-  display: grid;
-  /**
-   * minmax(0, 1fr) لا 1fr: عنصر الشبكة لا ينكمش دون عرض محتواه افتراضياً
-   * (min-width: auto)، فكان عنوان عربي طويل يضاعف عرض عمودين ويدفع ثلاثة
-   * مربّعات خارج الشاشة عند x سالب. القيمة تسمح للعمود بالنزول تحت محتواه.
-   */
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+.s-slip-group {
+  margin: 18px 0 8px;
+  font-size: var(--s-small);
+  font-weight: 700;
 }
-.s-tile {
+
+.s-slip-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--s-body);
+  padding-block: 5px;
+}
+
+/* القائد نقاط حقيقية لا خيط: الخيوط ممنوعة، والنقاط من تقاليد الإيصال */
+.s-leader {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #57544d;
+}
+
+.s-slip-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.s-slip-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  background: var(--s-paper-ink);
+  color: var(--s-paper);
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
+/* ---------- المراحل: أسطر تخطو ---------- */
+
+.s-steps {
+  display: grid;
+  gap: clamp(14px, 1.8vw, 26px);
+}
+
+.s-step {
+  margin: 0;
+  font-size: var(--s-big);
+  line-height: 1.04;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--s-ink-dim);
+}
+
+.s-step:last-child {
+  color: var(--s-ink);
+}
+
+/* ---------- الأدوار: عنوان مثبّت وصفوف تمرّ ---------- */
+
+.s-roles {
+  display: grid;
+  gap: clamp(32px, 5vw, 72px);
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.6fr);
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .s-roles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.s-roles-head {
+  position: sticky;
+  top: 48px;
+}
+
+.s-role {
+  display: grid;
+  gap: 8px;
+  padding-block: clamp(26px, 3vw, 44px);
+  background: var(--s-ground);
+}
+
+.s-role + .s-role {
+  margin-top: 10px;
+}
+
+.s-role[data-lit="true"] {
   background: var(--s-field);
-  padding: 26px;
-  /**
-   * لا aspect-ratio: المربّع الذي يمتدّ عمودين يصير ضعف ارتفاع جيرانه فيترك
-   * تحتها شريطاً ميتاً. الشبكة تسوّي ارتفاع الصف وحدها، ويكفي حدّ أدنى.
-   */
-  min-height: 196px;
+  padding-inline: clamp(18px, 2vw, 28px);
+}
+
+.s-role-name {
+  margin: 0;
+  font-size: var(--s-mid);
+  font-weight: 700;
+}
+
+.s-role-q {
+  margin: 0;
+  font-size: var(--s-body);
+}
+
+.s-role-sees {
+  margin: 0;
+  font-size: var(--s-body);
+  color: var(--s-ink-dim);
+  max-width: 62ch;
+}
+
+/* ---------- العزل: جملة واحدة كبيرة ---------- */
+
+/**
+ * جملة العزل بيان لا عنوان: تبقى عند مقاس البيان (34px على المكتب، 22px على الهاتف)
+ * مهما طالت، فالقارئ يقرأ ما فوق ذلك على أنه عنوان من ستة أسطر.
+ */
+.s-run-on {
+  margin: 0;
+  font-size: clamp(22px, 2.6vw, 34px);
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #6d7689;
+}
+
+.s-run-on strong {
+  color: var(--s-ink);
+  font-weight: 700;
+}
+
+.s-run-on span {
+  transition: color 420ms ease-out;
+}
+
+.s-run-on span[data-lit="true"] {
+  color: var(--s-ink);
+}
+
+/* ---------- الدعوة: الشريط كلّه زر ---------- */
+
+/* الشريط يأخذ ارتفاعه من الكلمة نفسها: ارتفاع ثابت مع overflow كان يقصّ نزول الحروف */
+.s-cta {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  text-decoration: none;
-}
-.s-tile-head {
-  grid-column: span 2;
+  justify-content: space-between;
+  gap: clamp(24px, 5vh, 72px);
+  position: relative;
   background: var(--s-accent);
   color: var(--s-on-accent);
-  justify-content: space-between;
+  text-decoration: none;
+  min-height: 60svh;
+  padding: clamp(22px, 3vw, 44px) var(--s-margin) clamp(18px, 3vh, 40px);
+  transition: background-color 120ms ease-out, color 120ms ease-out;
 }
-@media (max-width: 900px) {
-  .s-tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
+
+.s-cta:hover,
+.s-cta:focus-visible {
+  background: var(--s-on-accent);
+  color: var(--s-accent);
+}
+
+.s-cta-top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
+.s-cta-word {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  font-size: var(--s-giant);
+  line-height: 0.9;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+  text-align: start;
+  max-width: 1600px;
+}
+
+/* ---------- التذييل: اسم مقصوص ---------- */
+
+.s-footer {
+  background: var(--s-field);
+  padding-top: var(--s-gap);
+  overflow: hidden;
+}
+
+.s-footer-top {
+  display: grid;
+  gap: clamp(28px, 4vw, 64px);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .s-footer-top {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .s-tile-head {
-    grid-column: span 2;
-    min-height: 128px;
-  }
+}
+
+.s-footer-links {
+  display: grid;
+  gap: 10px;
+  font-size: var(--s-small);
+}
+
+.s-footer-links a {
+  color: var(--s-ink-dim);
+  text-decoration: none;
+}
+
+.s-footer-links a:hover {
+  color: var(--s-ink);
+}
+
+.s-credits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: clamp(40px, 6vw, 96px);
+  font-size: var(--s-small);
+  line-height: 1.6;
+  color: #8a93a3;
+}
+
+.s-credits a {
+  color: #8d96a6;
+}
+
+.s-wordmark {
+  margin: 10px 0 0;
+  font-size: var(--s-giant);
+  line-height: 0.74;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+  transform: translateY(26%);
+  color: var(--s-ink);
 }
 
 /* ---------- الحركة ---------- */
 
 /**
- * ظهور أجزاء كل قسم بالتتابع: العنوان ثم النص ثم الصورة. المحتوى مكتوب في
- * الصفحة دائماً؛ الحركة تُضاف بعد التركيب فقط، فإن تعطّل السكربت ظهر كل شيء.
+ * المحتوى مكتوب في الصفحة دائماً. الفئة s-ready هي ما يفتح باب الانتقالات،
+ * وتُضاف بعد التركيب — فإن تعطّل السكربت ظهر كل شيء في مكانه.
  */
-.s-rise {
+/**
+ * القاعدة: كل شيء ظاهر افتراضاً. الإخفاء مشروط بـ s-ready — وهي فئة لا تُضاف إلا
+ * بعد أن يعمل السكربت فعلاً. هكذا لا يبقى سطر واحد مخفياً إن تعثّر السكربت، وهو
+ * ما حدث في أول قياس: جملة الصدارة وزرّها لم يظهرا في اللقطة.
+ */
+.s-ready .s-rise:not([data-shown="true"]) {
   opacity: 0;
-  transform: translateY(26px);
+  transform: translateY(22px);
 }
+
 .s-ready .s-rise {
-  transition:
-    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 620ms cubic-bezier(0.22, 1, 0.36, 1), transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
   transition-delay: var(--d, 0ms);
 }
-.s-ready .s-rise[data-shown="true"] {
-  opacity: 1;
-  transform: none;
+
+/* الحركة التوقيعية: كل سطر من الجملة يصعد من خلف خطّ قاعدته */
+.s-mask {
+  display: block;
+  overflow: hidden;
 }
 
-/** الحركة التوقيعية: الفتحة تنفتح على النص المتغيّر. */
-@keyframes s-shutter {
-  from {
-    clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%);
-  }
-  to {
-    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-  }
-}
-@keyframes s-settle {
-  from {
-    transform: scale(1.12);
-  }
-  to {
-    transform: none;
-  }
-}
-.s-shutter[data-shown="true"] {
-  animation: s-shutter 1100ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.s-shutter[data-shown="true"] img {
-  animation: s-settle 1600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.s-ready .s-mask:not([data-shown="true"]) > span {
+  transform: translateY(104%);
 }
 
-/** الصورة الوحيدة المتحرّكة: انجراف بطيء دائم على صورة واحدة. */
-@keyframes s-drift {
-  0%,
-  100% {
-    transform: scale(1.06) translate3d(0, 0, 0);
-  }
-  50% {
-    transform: scale(1.12) translate3d(1.5%, -1.5%, 0);
-  }
-}
-.s-drift {
-  animation: s-drift 26s ease-in-out infinite;
+.s-ready .s-mask > span {
+  display: block;
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--d, 0ms);
 }
 
-@keyframes s-iris-in {
-  from {
-    opacity: 0;
-    transform: rotate(-22deg) scale(0.86);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.s-ready .s-hero-iris {
-  animation: s-iris-in 1400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.s-mask > span {
+  display: block;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .s-rise {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-  .s-shutter[data-shown="true"],
-  .s-shutter[data-shown="true"] img,
-  .s-drift,
-  .s-ready .s-hero-iris {
+  .site * {
     animation: none !important;
   }
-  .s-btn:hover,
-  .s-btn-quiet:hover {
+  .s-rise,
+  .s-ready .s-rise {
+    opacity: 1;
     transform: none;
+    transition: none;
+  }
+  .s-mask > span,
+  .s-ready .s-mask > span {
+    transform: none;
+    transition: none;
+  }
+}
+
+
+/* ---------- العزل: الجملة وصورة مكان التشغيل ---------- */
+
+.s-isolation {
+  display: grid;
+  gap: clamp(28px, 4vw, 64px);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  .s-isolation {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
+/* ---------- المشكلة: نصّ وصورتان، وعلى الهاتف عمود واحد ---------- */
+
+.s-problem {
+  display: grid;
+  gap: clamp(32px, 4vw, 64px);
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 27vw);
+  align-items: start;
+}
+
+/* على الهاتف تنزل الصورتان تحت النص صفاً واحداً: عمودان على 390px يخنقان السؤال */
+@media (max-width: 860px) {
+  .s-problem {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .s-problem .s-figure {
+    grid-template-columns: 1fr 1fr;
   }
 }

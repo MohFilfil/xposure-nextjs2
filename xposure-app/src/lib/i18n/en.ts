@@ -936,6 +936,96 @@ export const en: Dict = {
     }
   },
 
+  site2: {
+    /* header */
+    navCompare: "The comparison",
+    navHow: "How it works",
+    navTrust: "Isolation",
+    navEnter: "Enter the demo",
+
+    /* hero — two lines, about 32 characters each */
+    heroLine1: "The control changed.",
+    heroLine2: "Read its new words.",
+    heroNote:
+      "An agent inside your network compares every new release of the National Cybersecurity Authority's controls against the version you comply with, and puts the difference in front of you in its own words.",
+    heroAction: "Enter the demo",
+
+    /* the problem — a staircase of five questions */
+    stairsNote: "Five questions every compliance officer knows. These are today's answers.",
+    q1: "When was it issued?",
+    a1: "Published with no notice. Found through an auditor's question.",
+    q2: "What actually changed?",
+    a2: "Two documents of hundreds of pages, compared line by line.",
+    q3: "Who here is affected?",
+    a3: "The mapping lives in three people's heads and two spreadsheets.",
+    q4: "Who decided, on what text?",
+    a4: "A decision in a meeting leaves nothing to produce later.",
+    q5: "When does it take effect?",
+    a5: "Seven clauses on one day, seen only weeks ahead.",
+    stairsFoot: "So months of work get demanded in weeks.",
+
+    /* the live thing: pick a clause */
+    pickHeading: "Read the control as published",
+    pickNote: "Five of the twelve clauses that changed between the two releases. Press a clause number to read it.",
+    pickMore: "Other clauses:",
+    before: "Was",
+    after: "Now",
+    noPrevious: "No counterpart in the previous release. An entirely new requirement.",
+    citationLine: "Code verified this text appears verbatim in the stored raw file.",
+    effective: "effective",
+    pageWord: "page",
+
+    /* the numbers — a total and its receipt */
+    receiptHeading: "Forty-seven differences. Twelve concern you.",
+    receiptNote: "The comparison engine strips the cosmetic ones in code before the text reaches the model.",
+    receiptTotalCaption: "substantive changes needing a specialist's decision",
+    receiptSlipTitle: "Comparison receipt",
+    receiptGroupRaw: "What the engine found",
+    receiptRaw: "Textual differences between releases",
+    receiptGroupDropped: "What code stripped",
+    receiptNumbering: "Renumbering and reordering",
+    receiptFormat: "Formatting and whitespace",
+    receiptWording: "Wording with no effect on obligation",
+    receiptGroupKept: "What remained for review",
+    receiptCritical: "Critical",
+    receiptStrategic: "Strategic",
+    receiptQuick: "Quick action",
+    receiptWatch: "Watch",
+    receiptTotalRow: "Awaiting a human decision",
+
+    /* the stages — one line each */
+    stagesHeading: "Five stages. The last is a stop.",
+    stage1: "First it fetches the text as published.",
+    stage2: "Then code strips the cosmetic from it.",
+    stage3: "Then it ties the difference to your assets.",
+    stage4: "Then it checks the quotation verbatim.",
+    stage5: "Then it stops. And you decide.",
+    stagesFoot:
+      "The agent approves no clause, marks no requirement as met, and modifies not one file in the facility. Approval creates a task in its owner's name; rejection needs a written reason — and both are written in your name in a log that cannot be edited.",
+
+    /* roles — pinned heading, passing rows */
+    rolesHeading: "A screen per question",
+    rolesNote: "One application. Each role sees what concerns it, and approval rights sit with one role.",
+    roleQuestion: "First question",
+    roleSees: "What they see",
+
+    /* isolation — one large sentence */
+    trustOpening: "What leaves your network:",
+    trustClose: "Nothing.",
+
+    /* the call */
+    ctaWord: "Enter",
+    ctaNote: "Five ready-made accounts, one per role, with no password.",
+
+    /* footer */
+    footerInvite: "Try it on your own controls.",
+    footerAction: "Request a demo",
+    footerLinks: "Links",
+    credits: "Images:",
+    creditsBy: "by",
+    creditsVia: "via"
+  },
+
   toast: {
     notifications: "You have 4 critical issues awaiting your decision.",
     oscalExported: "The OSCAL file was exported to the internal reports folder."
