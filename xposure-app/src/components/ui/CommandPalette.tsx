@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Moon,
+  Radar,
   Search,
   Settings2,
   Sun
@@ -17,11 +18,11 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useSession } from "@/components/SessionProvider";
+import { useT } from "@/components/I18nProvider";
+import { useContent } from "@/lib/content";
 import { allowsPath } from "@/lib/roles";
-import { CHANGES, TASKS } from "@/lib/data";
 import { cx } from "@/lib/utils";
 import { fuzzyMatch, highlight } from "@/lib/search";
-import { PRIORITY_LABEL } from "@/lib/vocab";
 
 interface Command {
   id: string;
@@ -85,6 +86,8 @@ function Palette({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const { theme, toggle } = useTheme();
   const { role } = useSession();
+  const t = useT();
+  const { changes, tasks } = useContent();
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
   const [recent, setRecent] = useState<string[]>([]);
@@ -110,18 +113,19 @@ function Palette({ onClose }: { onClose: () => void }) {
     };
 
     const nav: Command[] = [
-      { id: "nav-dashboard", href: "/dashboard", label: "لوحة التحكم", group: "التنقل", icon: LayoutDashboard, chord: ["g", "d"], run: go("/dashboard") },
-      { id: "nav-changes", href: "/changes", label: "التغييرات", group: "التنقل", icon: GitCompare, chord: ["g", "c"], run: go("/changes") },
-      { id: "nav-tasks", href: "/tasks", label: "المهام", group: "التنقل", icon: ListChecks, chord: ["g", "t"], run: go("/tasks") },
-      { id: "nav-audit", href: "/audit", label: "سجل التدقيق", group: "التنقل", icon: History, chord: ["g", "a"], run: go("/audit") },
-      { id: "nav-settings", href: "/settings", label: "الإعدادات", group: "التنقل", icon: Settings2, chord: ["g", "s"], run: go("/settings") }
+      { id: "nav-dashboard", href: "/dashboard", label: t.nav.dashboard, group: t.palette.navGroup, icon: LayoutDashboard, chord: ["g", "d"], run: go("/dashboard") },
+      { id: "nav-changes", href: "/changes", label: t.nav.changes, group: t.palette.navGroup, icon: GitCompare, chord: ["g", "c"], run: go("/changes") },
+      { id: "nav-tasks", href: "/tasks", label: t.nav.tasks, group: t.palette.navGroup, icon: ListChecks, chord: ["g", "t"], run: go("/tasks") },
+      { id: "nav-sources", href: "/sources", label: t.nav.sources, group: t.palette.navGroup, icon: Radar, run: go("/sources") },
+      { id: "nav-audit", href: "/audit", label: t.nav.audit, group: t.palette.navGroup, icon: History, chord: ["g", "a"], run: go("/audit") },
+      { id: "nav-settings", href: "/settings", label: t.nav.settings, group: t.palette.navGroup, icon: Settings2, chord: ["g", "s"], run: go("/settings") }
     ];
 
     const actions: Command[] = [
       {
         id: "act-theme",
-        label: theme === "dark" ? "التحويل إلى السمة الفاتحة" : "التحويل إلى السمة الداكنة",
-        group: "إجراءات",
+        label: theme === "dark" ? t.common.toLight : t.common.toDark,
+        group: t.palette.actionsGroup,
         icon: theme === "dark" ? Sun : Moon,
         chord: ["Shift", "T"],
         run: () => {
@@ -131,22 +135,22 @@ function Palette({ onClose }: { onClose: () => void }) {
       }
     ];
 
-    const changes: Command[] = CHANGES.map((c) => ({
+    const changeCmds: Command[] = changes.map((c) => ({
       id: `change-${c.id}`,
       label: c.title,
-      hint: `${c.id} · البند ${c.clause} · ${PRIORITY_LABEL[c.priority]}`,
-      group: "التغييرات",
+      hint: `${c.id} · ${t.detail.clause} ${c.clause} · ${t.priority[c.priority]}`,
+      group: t.palette.changesGroup,
       icon: GitCompare,
       run: go(`/changes/${c.id}`)
     }));
 
-    const tasks: Command[] = TASKS.map((t) => ({
-      id: `task-${t.id}`,
-      label: t.title,
-      hint: `${t.id} · ${t.owner}`,
-      group: "المهام",
+    const taskCmds: Command[] = tasks.map((task) => ({
+      id: `task-${task.id}`,
+      label: task.title,
+      hint: `${task.id} · ${task.owner}`,
+      group: t.palette.tasksGroup,
       icon: ListChecks,
-      run: go(`/changes/${t.change}`)
+      run: go(`/changes/${task.change}`)
     }));
 
     /**
@@ -158,10 +162,10 @@ function Palette({ onClose }: { onClose: () => void }) {
     return [
       ...nav.filter((c) => permitted(c.href ?? "")),
       ...actions,
-      ...(permitted("/changes") ? changes : []),
-      ...(permitted("/tasks") || permitted("/changes") ? tasks : [])
+      ...(permitted("/changes") ? changeCmds : []),
+      ...(permitted("/tasks") || permitted("/changes") ? taskCmds : [])
     ];
-  }, [router, theme, toggle, onClose, role]);
+  }, [router, theme, toggle, onClose, role, t, changes, tasks]);
 
   const results = useMemo(() => {
     const q = query.trim();
@@ -171,10 +175,10 @@ function Palette({ onClose }: { onClose: () => void }) {
       const recentCmds = recent
         .map((id) => commands.find((c) => c.id === id))
         .filter((c): c is Command => Boolean(c))
-        .map((c) => ({ cmd: { ...c, group: "الأخيرة", icon: Clock }, indices: [] as number[] }));
+        .map((c) => ({ cmd: { ...c, group: t.palette.recentGroup, icon: Clock }, indices: [] as number[] }));
 
       const rest = commands
-        .filter((c) => c.group === "التنقل" || c.group === "إجراءات")
+        .filter((c) => c.group === t.palette.navGroup || c.group === t.palette.actionsGroup)
         .map((cmd) => ({ cmd, indices: [] as number[] }));
 
       return [...recentCmds, ...rest];
@@ -192,7 +196,7 @@ function Palette({ onClose }: { onClose: () => void }) {
       .filter((r): r is { cmd: Command; indices: number[]; score: number } => r !== null)
       .sort((a, b) => b.score - a.score)
       .slice(0, RESULT_MAX);
-  }, [commands, query, recent]);
+  }, [commands, query, recent, t]);
 
   useEffect(() => {
     const t = requestAnimationFrame(() => inputRef.current?.focus());
@@ -249,7 +253,7 @@ function Palette({ onClose }: { onClose: () => void }) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="لوحة الأوامر"
+        aria-label={t.palette.placeholder}
         onKeyDown={onKeyDown}
         className="glass flex w-full max-w-[560px] animate-scale-in flex-col overflow-hidden rounded-lg border shadow-lg"
       >
@@ -260,8 +264,8 @@ function Palette({ onClose }: { onClose: () => void }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="ابحث عن صفحة، أو تغيير برقم بنده، أو مهمة…"
-            aria-label="ابحث في الأوامر"
+            placeholder={t.palette.placeholder}
+            aria-label={t.palette.placeholder}
             aria-controls="palette-results"
             aria-activedescendant={results[cursor] ? `palette-opt-${results[cursor].cmd.id}` : undefined}
             className="w-full bg-transparent py-4 font-body text-body text-ink outline-none placeholder:text-ink-subtle"
@@ -275,12 +279,12 @@ function Palette({ onClose }: { onClose: () => void }) {
           id="palette-results"
           ref={listRef}
           role="listbox"
-          aria-label="النتائج"
+          aria-label={t.palette.empty}
           className="max-h-[52vh] overflow-y-auto p-2"
         >
           {results.length === 0 ? (
             <p className="px-3 py-8 text-center font-body text-body-sm text-ink-muted">
-              لا نتيجة تطابق «{query}». جرّب رقم البند أو معرّف التغيير.
+              {t.palette.empty} — «{query}»
             </p>
           ) : (
             results.map((r, i) => {
@@ -343,15 +347,15 @@ function Palette({ onClose }: { onClose: () => void }) {
           <span className="flex items-center gap-1">
             <kbd className="rounded-sm border border-border px-1.5 py-0.5 font-mono">↑</kbd>
             <kbd className="rounded-sm border border-border px-1.5 py-0.5 font-mono">↓</kbd>
-            للتنقل
+            {t.palette.toNavigate}
           </span>
           <span className="flex items-center gap-1">
             <kbd className="rounded-sm border border-border px-1.5 py-0.5 font-mono">Enter</kbd>
-            للفتح
+            {t.palette.toOpen}
           </span>
           <span className="ms-auto hidden items-center gap-1 sm:flex">
             <kbd className="rounded-sm border border-border px-1.5 py-0.5 font-mono">?</kbd>
-            كل الاختصارات
+            {t.shortcuts.title}
           </span>
         </div>
       </div>

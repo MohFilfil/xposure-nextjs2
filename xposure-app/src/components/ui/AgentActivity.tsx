@@ -2,6 +2,7 @@
 
 import { AlertCircle, Check, FileSearch, GitCompare, Hand, Quote, Radar } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useT } from "@/components/I18nProvider";
 import { cx } from "@/lib/utils";
 
 /**
@@ -13,43 +14,17 @@ import { cx } from "@/lib/utils";
  * المنتج لا وعداً في عرض تقديمي.
  */
 export interface AgentStep {
-  key: string;
-  label: string;
-  detail: string;
+  /** مفتاح المرحلة — هو نفسه مفتاحها في المعجم وفي طوابع آخر دورة. */
+  key: "fetch" | "compare" | "impact" | "citation" | "await";
   icon: LucideIcon;
 }
 
 export const AGENT_STEPS: AgentStep[] = [
-  {
-    key: "fetch",
-    label: "الجلب",
-    detail: "يفحص صفحات الجهة ويحفظ الملف الخام كما نُشر مع بصمته.",
-    icon: Radar
-  },
-  {
-    key: "compare",
-    label: "المقارنة",
-    detail: "يقارن النص بآخر نسخة محفوظة، ويستبعد الكود الفروق الشكلية قبل النموذج.",
-    icon: GitCompare
-  },
-  {
-    key: "impact",
-    label: "تحليل الأثر",
-    detail: "يربط كل فرق جوهري بالمنتجات والعمليات والضوابط المتأثرة به.",
-    icon: FileSearch
-  },
-  {
-    key: "citation",
-    label: "فحص الاستشهاد",
-    detail: "يتحقّق الكود من وجود النص المقتبس حرفياً في الملف الخام المحفوظ.",
-    icon: Quote
-  },
-  {
-    key: "await",
-    label: "توقّف بانتظار قرار بشري",
-    detail: "لا يعتمد الوكيل بنداً ولا يغلقه. القرار لمسؤول الامتثال، ويُسجَّل باسمه.",
-    icon: Hand
-  }
+  { key: "fetch", icon: Radar },
+  { key: "compare", icon: GitCompare },
+  { key: "impact", icon: FileSearch },
+  { key: "citation", icon: Quote },
+  { key: "await", icon: Hand }
 ];
 
 export type StepState = "done" | "running" | "waiting" | "idle";
@@ -80,6 +55,7 @@ export function AgentActivity({
   compact?: boolean;
   note?: React.ReactNode;
 }) {
+  const t = useT();
   return (
     <div>
       <ol className="relative flex flex-col gap-1" aria-live="polite">
@@ -93,6 +69,7 @@ export function AgentActivity({
         {AGENT_STEPS.map((step, i) => {
           const state = stateOf(i, active);
           const Icon = step.icon;
+          const copy = t.agent.steps[step.key];
           return (
             <li key={step.key} className="relative flex items-start gap-3 py-2">
               <span
@@ -129,19 +106,19 @@ export function AgentActivity({
                       state === "idle" ? "text-ink-muted" : "font-semibold text-ink"
                     )}
                   >
-                    {step.label}
+                    {copy.label}
                   </span>
                   {stamps?.[step.key] && (
                     <span className="num font-mono text-caption text-ink-muted" dir="ltr">
                       {stamps[step.key]}
                     </span>
                   )}
-                  {state === "running" && <span className="font-body text-caption text-brand">جارٍ الآن…</span>}
+                  {state === "running" && <span className="font-body text-caption text-brand">{t.agent.inProgress}</span>}
                   {state === "waiting" && (
-                    <span className="font-body text-caption font-semibold text-warning">متوقّف — بانتظارك</span>
+                    <span className="font-body text-caption font-semibold text-warning">{t.agent.pausedNow}</span>
                   )}
                 </span>
-                {!compact && <span className="font-body text-caption text-ink-muted">{step.detail}</span>}
+                {!compact && <span className="font-body text-caption text-ink-muted">{copy.detail}</span>}
               </span>
             </li>
           );

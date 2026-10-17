@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import "./site.css";
-import { CHANGES } from "@/lib/data";
+import { useI18n } from "@/components/I18nProvider";
+import { useContent } from "@/lib/content";
 
 /**
  * الصفحة التعريفية العامة لـ Xposure.
@@ -14,69 +15,6 @@ import { CHANGES } from "@/lib/data";
  * الشيء الحيّ: المقارنة. يختار الزائر بنداً فتنفتح الفتحة على نصّه قبل وبعد،
  * ببيانات المنتج الحقيقية (lib/data.ts) لا بنصّ معروض.
  */
-
-const PICK = CHANGES.slice(0, 5);
-const DEMO_MAIL =
-  "mailto:demo@xposure.local?subject=" +
-  encodeURIComponent("طلب عرض توضيحي — Xposure") +
-  "&body=" +
-  encodeURIComponent("المنشأة:\nالضوابط التي نلتزم بها:\nعدد البنود المتابَعة:\n\nيُفضّل التواصل عبر:");
-
-/** نقاط الألم كما تُسمع من مسؤول امتثال في منشأة صناعية — سؤال وجوابه اليوم. */
-const PAINS = [
-  {
-    q: "متى صدر الإصدار الجديد؟",
-    a: "يُنشَر على موقع الجهة بلا إشعار يصلك، ويُكتشَف غالباً من سؤال مدقّق أو من زميل في منشأة أخرى."
-  },
-  {
-    q: "ما الذي تغيّر فعلاً؟",
-    a: "مقارنة وثيقتين بمئات الصفحات سطراً سطراً، ومعظم الفروق ترقيم وتنسيق يستهلك الوقت ولا يغيّر التزاماً واحداً."
-  },
-  {
-    q: "من يتأثّر به عندنا؟",
-    a: "الربط بين بند تنظيمي ومنتج وعملية وضابط داخلي مخزّن في رؤوس أشخاص وجداول متفرّقة، ويغيب بغيابهم."
-  },
-  {
-    q: "من قرّر، وعلى أي نص؟",
-    a: "القرار يُتّخَذ في اجتماع أو رسالة، فلا يبقى منه أثر يقول متى كان، وعلى أي نصّ بُنيَ، وما الدليل الذي سيُعرَض لاحقاً."
-  },
-  {
-    q: "متى يسري؟",
-    a: "مواعيد السريان متكدّسة في تواريخ قليلة، ولا تُرى كموجة عمل واحدة إلا قبل أسابيع من استحقاقها."
-  }
-];
-
-/**
- * الأدوار الخمسة كما تُعرَض لزائر لا يعرف المنتج: اسمه، ثم السؤال الذي
- * تفتح شاشته لأجله، ثم ما يراه فعلاً. تطابق lib/roles.ts في التطبيق.
- */
-const ROLES_ON_SITE = [
-  {
-    name: "مسؤول الامتثال",
-    question: "«ما الذي ينتظر قراري اليوم؟»",
-    sees: "طابور المراجعة كاملاً: النص قبل وبعد، الأصول المتأثرة، والتوصية. صلاحية الاعتماد والرفض عنده وحده."
-  },
-  {
-    name: "القيادة التنفيذية",
-    question: "«أين نقف، وما الذي قد يُحرجنا؟»",
-    sees: "درجة الامتثال، البنود الحرجة المفتوحة، ومواعيد السريان القادمة — بلا طابور يومي ولا أزرار قرار."
-  },
-  {
-    name: "مالك العملية أو المنتج",
-    question: "«ما المطلوب منّي أنا؟»",
-    sees: "مهامه وحدها مرتّبة بالأقرب استحقاقاً، والمنتجات والعمليات التي ستتأثر بتنفيذها."
-  },
-  {
-    name: "المدقّق",
-    question: "«من قرّر، ومتى، وبأي دليل؟»",
-    sees: "السجل كاملاً والأدلة المرفقة، بلا صلاحية تعديل واحدة — ولا زرّ اعتماد في أي شاشة."
-  },
-  {
-    name: "المسؤول التقني",
-    question: "«هل الوكيل يعمل كما يجب؟»",
-    sees: "صحة كل مصدر، زمن الدورة، والنموذج العامل بإصداره ونسخة تعليماته — بلا وصول إلى محتوى البنود."
-  }
-];
 
 /** فتحة العدسة: حلقة مصمتة بفجوة سداسية، تقطعها ست شفرات. الشكل الوحيد في الصفحة. */
 function Iris({ className, title }: { className?: string; title?: string }) {
@@ -120,6 +58,16 @@ function IrisBullet() {
 export default function SitePage() {
   const root = useRef<HTMLDivElement>(null);
   const [clause, setClause] = useState(0);
+  const { t, lang, setLang } = useI18n();
+  const { changes } = useContent();
+  const site = t.site;
+  /* البنود المعروضة تتبع لغة الواجهة، والمقارنة تُقرأ من بيانات المنتج نفسها */
+  const PICK = changes.slice(0, 5);
+  const DEMO_MAIL =
+    "mailto:demo@xposure.local?subject=" +
+    encodeURIComponent(site.mailSubject) +
+    "&body=" +
+    encodeURIComponent(site.mailBody);
 
   /**
    * الحركة تُركَّب بعد التحميل: الصفحة مكتوبة كاملة في HTML، وإن لم يعمل السكربت
@@ -156,7 +104,7 @@ export default function SitePage() {
   }, []);
 
   const c = PICK[clause];
-  const waves = Array.from(new Set(CHANGES.map((x) => x.effective))).sort();
+  const waves = Array.from(new Set(changes.map((x) => x.effective))).sort();
 
   return (
     <div className="site" ref={root}>
@@ -168,20 +116,36 @@ export default function SitePage() {
           </a>
           <div className="s-nav-links">
             <a href="#problem" className="s-nav-hide">
-              المشكلة
+              {site.navProblem}
             </a>
-            <a href="#compare">المقارنة</a>
+            <a href="#compare">{site.navCompare}</a>
             <a href="#how" className="s-nav-hide">
-              كيف يعمل
+              {site.navHow}
             </a>
             <a href="#roles" className="s-nav-hide">
-              الأدوار
+              {site.navRoles}
             </a>
             <a href="#isolation" className="s-nav-hide">
-              نموذج الثقة
+              {site.navTrust}
             </a>
+            {/* مبدّل اللغة: الصفحة العامة تُقرأ قبل الدخول، فاللغة تُختار منها لا من الإعدادات */}
+            <button
+              type="button"
+              onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+              aria-label={lang === "ar" ? "Switch to English" : "التحويل إلى العربية"}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                font: "inherit",
+                color: "inherit",
+                cursor: "pointer"
+              }}
+            >
+              {lang === "ar" ? "English" : "العربية"}
+            </button>
             <a href="/login" style={{ fontWeight: 700 }}>
-              ادخل العرض
+              {site.navEnter}
             </a>
           </div>
         </nav>
@@ -192,23 +156,22 @@ export default function SitePage() {
         <Iris className="s-hero-iris" />
         <div className="s-hero-text">
           <h1 className="s-display s-rise">
-            نرصد تغيّر الضوابط
+            {site.heroLine1}
             <br />
-            قبل المدقّق.
+            {site.heroLine2}
           </h1>
           <p className="s-lede s-rise" style={{ marginBlockStart: 28, ["--d" as string]: "90ms" }}>
-            وكيل يعمل داخل شبكتك، يقارن كل إصدار جديد من ضوابط الهيئة الوطنية للأمن السيبراني بالإصدار الذي تلتزم به،
-            ويضع الفرق أمامك بنصّه الحرفي.
+            {site.heroLede}
           </p>
           <div
             className="s-rise"
             style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBlockStart: 40, ["--d" as string]: "180ms" }}
           >
             <a className="s-btn s-cut" href="/login">
-              ادخل العرض التوضيحي
+              {site.heroCta}
             </a>
             <a className="s-btn-quiet s-cut" href="#compare">
-              شاهد المقارنة
+              {site.heroCtaQuiet}
             </a>
           </div>
         </div>
@@ -221,14 +184,13 @@ export default function SitePage() {
        */}
       <section className="s-section" id="problem" style={{ background: "var(--s-field)" }}>
         <div className="s-wrap">
-          <h2 className="s-h2 s-rise">الإصدار يُنشَر. وأنت تعرف متأخراً.</h2>
+          <h2 className="s-h2 s-rise">{site.problemTitle}</h2>
           <p className="s-lede s-rise" style={{ marginBlockStart: 22, maxWidth: "54ch", ["--d" as string]: "80ms" }}>
-            لا أحد يتجاهل الامتثال عمداً. لكنّ متابعة وثيقة تتغيّر كل بضع سنوات عملٌ يدوي لا ينتهي،
-            وهذا ثمنه اليوم.
+            {site.problemLede}
           </p>
 
           <div style={{ marginBlockStart: 56, display: "grid", gap: 10 }}>
-            {PAINS.map((x, i) => (
+            {site.pains.map((x, i) => (
               <div
                 key={x.q}
                 className="s-rise"
@@ -253,7 +215,7 @@ export default function SitePage() {
           </div>
 
           <p className="s-note s-rise" style={{ marginBlockStart: 28, maxWidth: "64ch" }}>
-            والنتيجة واحدة دائماً: يُكتشَف الفرق متأخراً، فيصير عمل أشهر مطلوباً في أسابيع.
+            {site.problemFoot}
           </p>
         </div>
       </section>
@@ -261,10 +223,10 @@ export default function SitePage() {
       {/* ---------- الشيء الحيّ: المقارنة ---------- */}
       <section className="s-section" id="compare" style={{ background: "var(--s-field)" }}>
         <div className="s-wrap">
-          <h2 className="s-h2 s-rise">اختر بنداً. هذا ما تغيّر فيه.</h2>
+          <h2 className="s-h2 s-rise">{site.compareTitle}</h2>
           <p className="s-body s-rise" style={{ marginBlockStart: 20, ["--d" as string]: "80ms" }}>
-            خمسة من اثني عشر بنداً تغيّرت بين <span dir="ltr">ECC‑1:2018</span> و<span dir="ltr">ECC‑2:2024</span>. النص
-            أدناه هو نص الهيئة نفسه، لا تلخيصاً له.
+            {site.compareLede1} <span dir="ltr">ECC-1:2018</span> {site.compareLede2}{" "}
+            <span dir="ltr">ECC-2:2024</span>. {site.compareLede3}
           </p>
 
           <div
@@ -290,7 +252,7 @@ export default function SitePage() {
                   transition: "background-color 160ms ease, transform 160ms cubic-bezier(.22,1,.36,1)"
                 }}
               >
-                البند <span className="s-fig">{p.clause}</span>
+                {site.clause} <span className="s-fig">{p.clause}</span>
               </button>
             ))}
           </div>
@@ -306,7 +268,7 @@ export default function SitePage() {
             {/* شظية من واجهة المنتج نفسها: النص الجديد ثم السابق، كما تُعرض في التطبيق */}
             <div className="s-ui" data-ui style={{ padding: "clamp(26px, 2.6vw, 40px)" }}>
               <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--s-accent-text)" }}>
-                الإصدار الجديد · <span className="s-fig">{c.docTo}</span>
+                {site.newVersion} · <span className="s-fig">{c.docTo}</span>
               </p>
               <p style={{ margin: "20px 0 0", fontSize: "var(--s-diff)", lineHeight: 1.85 }}>
                 {c.current.map((seg, i) =>
@@ -323,11 +285,11 @@ export default function SitePage() {
 
             <div className="s-ui" data-ui style={{ padding: "clamp(26px, 2.6vw, 40px)" }}>
               <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--s-ink-dim)" }}>
-                الإصدار السابق · <span className="s-fig">{c.docFrom}</span>
+                {site.previousVersion} · <span className="s-fig">{c.docFrom}</span>
               </p>
               <p style={{ margin: "20px 0 0", fontSize: "var(--s-diff)", lineHeight: 1.85 }}>
                 {c.previous.length === 0 ? (
-                  <span style={{ color: "var(--s-ink-dim)" }}>لا يوجد بند مقابل — هذا متطلب مستحدث بالكامل.</span>
+                  <span style={{ color: "var(--s-ink-dim)" }}>{site.noPrevious}</span>
                 ) : (
                   c.previous.map((seg, i) =>
                     seg.kind === "del" ? (
@@ -344,8 +306,8 @@ export default function SitePage() {
           </div>
 
           <p className="s-note" style={{ marginBlockStart: 22 }}>
-            {c.title} · تاريخ السريان <span className="s-fig">{c.effective}</span> · تحقّق الكود من وجود النص حرفياً
-            في <span dir="ltr">{c.docTo}</span> صفحة <span className="s-fig">{c.page}</span>.
+            {c.title} · {site.citationNote1} <span className="s-fig">{c.effective}</span> · {site.citationNote2}{" "}
+            <span dir="ltr">{c.docTo}</span> {site.citationNote3} <span className="s-fig">{c.page}</span>.
           </p>
         </div>
       </section>
@@ -353,7 +315,7 @@ export default function SitePage() {
       {/* ---------- الأرقام ---------- */}
       <section className="s-section">
         <div className="s-wrap">
-          <h2 className="s-h2 s-rise">سبعة وأربعون فرقاً. اثنا عشر منها يعنيك.</h2>
+          <h2 className="s-h2 s-rise">{site.countsTitle}</h2>
           <div
             style={{
               marginBlockStart: 56,
@@ -363,9 +325,9 @@ export default function SitePage() {
             }}
           >
             {[
-              { n: "47", t: "فرقاً نصّياً بين الإصدارين، رصدها محرك المقارنة." },
-              { n: "35", t: "فرقاً شكلياً استبعده الكود قبل أن يصل النص إلى النموذج." },
-              { n: "12", t: "تغييراً جوهرياً يحتاج قرار مختصّ باسمه." }
+              { n: "47", t: site.count47 },
+              { n: "35", t: site.count35 },
+              { n: "12", t: site.count12 }
             ].map((s, i) => (
               <div key={s.n} className="s-rise" style={{ ["--d" as string]: `${i * 90}ms` }}>
                 <p
@@ -395,12 +357,13 @@ export default function SitePage() {
           <div className="s-tiles s-rise">
             <div className="s-tile s-tile-head">
               <h2 className="s-h2" style={{ fontSize: "clamp(27px, 3.2vw, 54px)", lineHeight: 1.08 }}>
-                اثنا عشر بنداً
+                {site.tilesHead1}
                 <br />
-                تغيّر جوهرياً
+                {site.tilesHead2}
               </h2>
               <p style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
-                بين <span dir="ltr">ECC‑1:2018</span> و<span dir="ltr">ECC‑2:2024</span>
+                {site.tilesBetween} <span dir="ltr">ECC-1:2018</span> {site.tilesAnd}{" "}
+                <span dir="ltr">ECC-2:2024</span>
               </p>
             </div>
             {/**
@@ -408,14 +371,14 @@ export default function SitePage() {
              * توجد شعارات. ووجود سطر صغير ثانٍ يجعل نهاية مربّعٍ تسبق عنوان الذي
              * يليه، فتُقرأ كأنها تسمية فوقية (eyebrow) — وهي ممنوعة.
              */}
-            {CHANGES.slice(0, 9).map((x) => (
+            {changes.slice(0, 9).map((x) => (
               <div key={x.id} className="s-tile">
                 <p className="s-tile-title">{x.title}</p>
               </div>
             ))}
             <a className="s-tile" href="/login" style={{ background: "var(--s-field-2)" }}>
               <p className="s-tile-title">
-                <span className="s-fig">+3</span> أخرى. افتح القائمة كاملة ←
+                <span className="s-fig">+3</span> {site.tilesMore} ←
               </p>
             </a>
           </div>
@@ -425,9 +388,9 @@ export default function SitePage() {
       {/* ---------- الشريط: المواعيد متكدّسة ---------- */}
       <section className="s-section s-field-accent">
         <div className="s-wrap">
-          <h2 className="s-h2 s-rise">مواعيدك ليست موزّعة. إنها متكدّسة.</h2>
+          <h2 className="s-h2 s-rise">{site.wavesTitle}</h2>
           <p className="s-body s-rise" style={{ marginBlockStart: 20, ["--d" as string]: "80ms" }}>
-            اثنا عشر بنداً تستحق في ثلاثة تواريخ فقط. سبعة منها في اليوم نفسه، وتلك موجة عمل واحدة لا سبعة مواعيد.
+            {site.wavesLede}
           </p>
           <div
             className="s-rise"
@@ -440,7 +403,7 @@ export default function SitePage() {
             }}
           >
             {waves.map((d) => {
-              const n = CHANGES.filter((x) => x.effective === d).length;
+              const n = changes.filter((x) => x.effective === d).length;
               return (
                 <div key={d} style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
                   <span
@@ -458,11 +421,11 @@ export default function SitePage() {
                       {d}
                     </p>
                     <p style={{ margin: "6px 0 0", fontSize: 17, fontWeight: 700 }}>
-                      {n === 1 ? "بند واحد يستحق" : n === 2 ? "بندان يستحقّان" : `${n} بنود تستحق`} في هذا اليوم
+                      {n === 1 ? site.waveOne : n === 2 ? site.waveTwo : `${n} ${site.waveMany}`} {site.waveSameDay}
                     </p>
                     {/* أسماء البنود نفسها: الشريط يحمل معلومة لا علامة */}
                     <ul style={{ listStyle: "none", margin: "14px 0 0", padding: 0, display: "grid", gap: 7 }}>
-                      {CHANGES.filter((x) => x.effective === d)
+                      {changes.filter((x) => x.effective === d)
                         .slice(0, 4)
                         .map((x) => (
                           <li key={x.id} style={{ fontSize: 15, lineHeight: 1.45, fontWeight: 500 }}>
@@ -471,7 +434,7 @@ export default function SitePage() {
                         ))}
                       {n > 4 && (
                         <li style={{ fontSize: 15, fontWeight: 700 }}>
-                          <span className="s-fig">+{n - 4}</span> أخرى
+                          <span className="s-fig">+{n - 4}</span> {site.waveMore}
                         </li>
                       )}
                     </ul>
@@ -486,10 +449,9 @@ export default function SitePage() {
       {/* ---------- كيف يعمل ---------- */}
       <section className="s-section" id="how">
         <div className="s-wrap">
-          <h2 className="s-h2 s-rise">خمس مراحل. آخرتُها توقّف.</h2>
+          <h2 className="s-h2 s-rise">{site.howTitle}</h2>
           <p className="s-body s-rise" style={{ marginBlockStart: 20, maxWidth: "58ch", ["--d" as string]: "80ms" }}>
-            الوكيل يمرّ بالمراحل نفسها في كل دورة، ويقف عند الخامسة دائماً: لا يعتمد بنداً، ولا يعتبر متطلباً
-            مستوفى، ولا يعدّل ملفاً واحداً في المنشأة.
+            {site.howLede}
           </p>
 
           {/**
@@ -510,19 +472,18 @@ export default function SitePage() {
             >
               <div style={{ padding: "clamp(28px, 3.4vw, 52px)" }}>
                 <p className="s-note" style={{ margin: "0 0 10px" }}>
-                  المرحلة <span className="s-fig">1</span> من <span className="s-fig">5</span>
+                  {site.stage} <span className="s-fig">1</span> {site.stageOf} <span className="s-fig">5</span>
                 </p>
-                <h3 className="s-h3">الجلب</h3>
+                <h3 className="s-h3">{site.stage1}</h3>
                 <p className="s-body" style={{ marginBlockStart: 14 }}>
-                  يفحص صفحات الجهات كل صباح عند الخامسة، ويحفظ الملف الخام كما نُشر مع بصمته. لا إصدار جديد يمرّ دون أن
-                  يُسجَّل وقت رصده.
+                  {site.stage1Body}
                 </p>
               </div>
               <img
                 src="/site/skyline.jpg"
                 width={1920}
                 height={1080}
-                alt="أفق مدينة الرياض قبيل الفجر."
+                alt={site.skylineAlt}
                 loading="lazy"
                 decoding="async"
                 style={{ width: "100%", height: "clamp(220px, 26vw, 330px)", objectFit: "cover", display: "block" }}
@@ -531,20 +492,20 @@ export default function SitePage() {
 
             {[
               {
-                h: "المقارنة",
-                b: "يستبعد الكود الفروق الشكلية، ترقيماً وتنسيقاً ومسافات، قبل أن يصل النص إلى النموذج، فلا يُستهلك حكم بشري على فاصلة."
+                h: site.stage2,
+                b: site.stage2Body
               },
               {
-                h: "تحليل الأثر",
-                b: "كل فرق جوهري يُربط بما يمسّه فعلاً: المنتجات، وخطوط العمليات، والضوابط الداخلية المقابلة له — فالقرار لا يُتّخَذ على نصّ مجرّد."
+                h: site.stage3,
+                b: site.stage3Body
               },
               {
-                h: "فحص الاستشهاد",
-                b: "يتحقّق الكود — لا النموذج — من وجود كل نص مقتبس حرفياً في الملف الخام المحفوظ. ما لم يُنشَر لا يُعرَض."
+                h: site.stage4,
+                b: site.stage4Body
               },
               {
-                h: "ثم تقرّر أنت",
-                b: "يتوقّف الوكيل هنا وينتظر. الاعتماد يُنشئ مهمة باسم مالكها وموعدها، والرفض يحتاج سبباً مكتوباً — وكلاهما يُكتب باسمك في سجل لا يقبل التعديل."
+                h: site.stage5,
+                b: site.stage5Body
               }
             ].map((x, i) => (
               <div
@@ -564,7 +525,8 @@ export default function SitePage() {
               >
                 <div>
                   <p className="s-note" style={{ margin: "0 0 10px", color: i === 3 ? "var(--s-on-accent)" : undefined }}>
-                    المرحلة <span className="s-fig">{i + 2}</span> من <span className="s-fig">5</span>
+                    {site.stage} <span className="s-fig">{i + 2}</span> {site.stageOf}{" "}
+                    <span className="s-fig">5</span>
                   </p>
                   <h3 className={i === 3 ? "s-h2" : "s-h3"}>{x.h}</h3>
                 </div>
@@ -587,10 +549,9 @@ export default function SitePage() {
        */}
       <section className="s-section" id="roles">
         <div className="s-wrap">
-          <h2 className="s-h2 s-rise">خمسة أدوار. شاشة لكل سؤال.</h2>
+          <h2 className="s-h2 s-rise">{site.rolesTitle}</h2>
           <p className="s-body s-rise" style={{ marginBlockStart: 20, maxWidth: "58ch", ["--d" as string]: "80ms" }}>
-            لا خمسة أنظمة ولا خمس نسخ: تطبيق واحد يعرض لكل دور ما يخصّه، ويمنع عنه ما لا يملكه.
-            صلاحية الاعتماد عند دور واحد — وهذا ما يجعل لسجل التدقيق معنى.
+            {site.rolesLede}
           </p>
 
           <div
@@ -602,7 +563,7 @@ export default function SitePage() {
               gridTemplateColumns: "repeat(auto-fit, minmax(214px, 1fr))"
             }}
           >
-            {ROLES_ON_SITE.map((r, i) => (
+            {site.roleCards.map((r, i) => (
               <div
                 key={r.name}
                 className="s-rise"
@@ -643,28 +604,20 @@ export default function SitePage() {
           >
             <div>
               <p className="s-note s-rise" style={{ margin: "0 0 14px" }}>
-                نموذج الثقة
+                {site.trustEyebrow}
               </p>
-              <h2 className="s-h2 s-rise">لا يخرج نصّ واحد من شبكتك.</h2>
+              <h2 className="s-h2 s-rise">{site.trustTitle}</h2>
               <p className="s-body s-rise" style={{ marginBlockStart: 22, ["--d" as string]: "80ms" }}>
-                النماذج تعمل على أجهزتك أنت: <span dir="ltr">Qwen2.5 14B</span> محلياً. لا مفتاح لمزوّد خارجي، ولا نسخة
-                من وثائقك على خادم لا تملكه.
+                {site.trustLede1} <span dir="ltr">Qwen2.5 14B</span> {site.trustLede2}
               </p>
               <ul
                 className="s-rise"
                 style={{ listStyle: "none", margin: "32px 0 0", padding: 0, display: "grid", gap: 16, ["--d" as string]: "160ms" }}
               >
-                {[
-                  "نماذج محلية: النموذج يعمل على عتاد المنشأة، بلا مفتاح مزوّد خارجي ولا استدعاء سحابي.",
-                  "قراءة فقط افتراضاً: لا يعدّل الوكيل ملفاً ولا سياسة، وأي صلاحية كتابة تُمنح صراحةً وتُسجّل.",
-                  "موافقة بشرية قبل أي أثر: لا مهمة تُنشَأ ولا بند يُغلَق إلا بقرار مختصّ مسجّل باسمه.",
-                  "لا شيء يغادر المنشأة: الوثائق والسجلات والقرارات تبقى داخل المحيط، والجلب وحده يخرج إلى ما نُشر علناً.",
-                  "سجل تدقيق لا يقبل التعديل ولا الحذف، وأي تغيير قرار يُسجَّل قراراً جديداً فوقه.",
-                  "النموذج يشرح سبب الأولوية ولا يحسب درجتها؛ الدرجة معادلة ثابتة يمكن مراجعتها."
-                ].map((t) => (
-                  <li key={t} style={{ display: "flex", gap: 14 }}>
+                {site.trustPoints.map((point) => (
+                  <li key={point} style={{ display: "flex", gap: 14 }}>
                     <IrisBullet />
-                    <span style={{ fontSize: 17, lineHeight: 1.6 }}>{t}</span>
+                    <span style={{ fontSize: 17, lineHeight: 1.6 }}>{point}</span>
                   </li>
                 ))}
               </ul>
@@ -677,14 +630,14 @@ export default function SitePage() {
                   src="/site/datacenter.jpg"
                   width={1920}
                   height={1280}
-                  alt="صفوف من خزائن الخوادم داخل مركز بيانات، تُرى من ممر التبريد."
+                  alt={site.datacenterAlt}
                   loading="lazy"
                   decoding="async"
                   style={{ width: "100%", height: "clamp(300px, 38vw, 480px)", objectFit: "cover", display: "block" }}
                 />
               </div>
               <figcaption className="s-note" style={{ marginBlockStart: 14 }}>
-                مركز بيانات: صورة توضّح بيئة التشغيل، وليست منشأة عميل.
+                {site.datacenterCaption}
               </figcaption>
             </figure>
           </div>
@@ -708,7 +661,7 @@ export default function SitePage() {
                   src="/site/board.png"
                   width={3000}
                   height={1600}
-                  alt="لوحة دوائر مطبوعة: مخطط التصميم إلى يمين الصورة واللوحة المصنّعة إلى يسارها."
+                  alt={site.boardAlt}
                   loading="lazy"
                   decoding="async"
                   style={{
@@ -721,18 +674,17 @@ export default function SitePage() {
                 />
               </div>
               <figcaption className="s-note" style={{ marginBlockStart: 14 }}>
-                لوحة دوائر مطبوعة: صورة لعالم الأصول التي تحكمها الضوابط.
+                {site.boardCaption}
               </figcaption>
             </figure>
             <div>
-              <h2 className="s-h2 s-rise">البند يتحوّل إلى قائمة أصول.</h2>
+              <h2 className="s-h2 s-rise">{site.assetsTitle}</h2>
               <p className="s-body s-rise" style={{ marginBlockStart: 22, ["--d" as string]: "80ms" }}>
-                كل تغيير مرتبط بما يمسّه فعلاً داخل المنشأة: المنتجات، وخطوط العمليات، والضوابط الداخلية المقابلة له.
-                فالقرار لا يُتخذ على نصّ مجرّد، بل على ما سيتغيّر في الأرض.
+                {site.assetsBody}
               </p>
               <p className="s-note s-rise" style={{ marginBlockStart: 20, ["--d" as string]: "140ms" }}>
-                مثال من بند التشفير <span className="s-fig">2‑3‑3‑1</span>: ثلاثة منتجات، وعمليتان، وضابطان
-                داخليان.
+                {site.assetsNote1} <span className="s-fig">2-3-3-1</span>
+                {site.assetsNote2}
               </p>
             </div>
           </div>
@@ -745,7 +697,7 @@ export default function SitePage() {
           src="/site/riyadh.jpg"
           width={1920}
           height={1280}
-          alt="أبراج مركز الملك عبدالله المالي في الرياض ليلاً."
+          alt={site.riyadhAlt}
           loading="lazy"
           decoding="async"
           className="s-drift"
@@ -761,21 +713,20 @@ export default function SitePage() {
         />
         <div className="s-wrap" style={{ position: "relative", zIndex: 1 }}>
           <h2 className="s-display s-rise" style={{ maxWidth: "16ch" }}>
-            ادخل العرض بالدور الذي يعنيك.
+            {site.ctaTitle}
           </h2>
           <p className="s-lede s-rise" style={{ marginBlockStart: 26, ["--d" as string]: "80ms" }}>
-            خمسة حسابات جاهزة، حساب لكل دور، بلا كلمة مرور: ادخل كمسؤول امتثال فترى التدفّق كاملاً،
-            أو كمدقّق فترى الشاشة نفسها بلا زر قرار واحد.
+            {site.ctaLede}
           </p>
           <div
             className="s-rise"
             style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBlockStart: 40, ["--d" as string]: "160ms" }}
           >
             <a className="s-btn s-cut" href="/login">
-              ادخل العرض التوضيحي
+              {site.heroCta}
             </a>
             <a className="s-btn-quiet s-cut" href={DEMO_MAIL}>
-              اطلب عرضاً على ضوابطك
+              {site.ctaQuiet}
             </a>
           </div>
         </div>
@@ -806,25 +757,28 @@ export default function SitePage() {
             }}
           >
             <p className="s-body" style={{ maxWidth: "40ch" }}>
-              رصد التغيّر التنظيمي وإدارة الامتثال، داخل المنشأة.{" "}
+              {site.footerLine}{" "}
               <a href="/login" style={{ color: "var(--s-accent-text)", fontWeight: 600 }}>
-                ادخل إلى العرض التوضيحي
+                {site.footerEnter}
               </a>
             </p>
             <p className="s-note" style={{ maxWidth: "62ch" }}>
-              الصور:{" "}
-              <a href="https://commons.wikimedia.org/wiki/File:Cern_datacenter.jpg">«Cern datacenter»</a> لـ
-              Hugovanmeijeren، <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY-SA 3.0</a>؛{" "}
+              {site.credits}{" "}
+              <a href="https://commons.wikimedia.org/wiki/File:Cern_datacenter.jpg">«Cern datacenter»</a>{" "}
+              {site.creditsBy} Hugovanmeijeren,{" "}
+              <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY-SA 3.0</a>;{" "}
               <a href="https://commons.wikimedia.org/wiki/File:King_Abdullah_Financial_District_(KAFD),_Riyadh,_Saudi_Arabia,_2026.jpg">
                 «King Abdullah Financial District, Riyadh»
               </a>
-              ، <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>؛{" "}
+              , <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>;{" "}
               <a href="https://commons.wikimedia.org/wiki/File:PCB_design_and_realisation_smt_and_through_hole.png">
                 «PCB design and realisation»
               </a>{" "}
-              لـ Mike1024، <a href="https://creativecommons.org/publicdomain/mark/1.0/">ملكية عامة</a>؛{" "}
-              <a href="https://commons.wikimedia.org/wiki/File:Riyadh_Skyline.jpg">«Riyadh Skyline»</a> لـ B.alotaby،{" "}
-              <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>، عبر Wikimedia Commons.
+              {site.creditsBy} Mike1024,{" "}
+              <a href="https://creativecommons.org/publicdomain/mark/1.0/">{site.creditsPublicDomain}</a>;{" "}
+              <a href="https://commons.wikimedia.org/wiki/File:Riyadh_Skyline.jpg">«Riyadh Skyline»</a>{" "}
+              {site.creditsBy} B.alotaby, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>,{" "}
+              {site.creditsVia}
             </p>
           </div>
         </div>

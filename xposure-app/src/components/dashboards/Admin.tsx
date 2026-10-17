@@ -13,7 +13,10 @@ import { AGENT_STEPS, AgentActivity } from "@/components/ui/AgentActivity";
 import { Reveal } from "@/components/motion/Reveal";
 import { useToast } from "@/components/ui/Toast";
 import { useSession } from "@/components/SessionProvider";
-import { AGENT_STATUS, CHANGES, LAST_RUN_STAMPS, SOURCES } from "@/lib/data";
+import { useT } from "@/components/I18nProvider";
+import { Num, Code } from "@/components/ui/Bidi";
+import { useContent } from "@/lib/content";
+import { LAST_RUN_STAMPS } from "@/lib/data";
 import type { Source } from "@/lib/types";
 import { cx } from "@/lib/utils";
 
@@ -27,6 +30,8 @@ export function AdminDashboard() {
   const router = useRouter();
   const toast = useToast();
   const { can } = useSession();
+  const t = useT();
+  const { changes: CHANGES, sources: SOURCES, agentStatus: AGENT_STATUS } = useContent();
   const [running, setRunning] = useState<number | null>(null);
 
   const active = SOURCES.filter((s) => s.state === "active");
@@ -40,7 +45,7 @@ export function AdminDashboard() {
     AGENT_STEPS.slice(1).forEach((_, i) => setTimeout(() => setRunning(i + 1), (i + 1) * 900));
     setTimeout(() => {
       setRunning(null);
-      toast("success", "اكتملت الدورة في 3.1 ثانية. لا إصدارات جديدة — والوكيل متوقّف بانتظار قرار بشري.");
+      toast("success", t.scan.doneAdmin);
     }, (AGENT_STEPS.length + 1) * 900);
   }
 
@@ -50,35 +55,36 @@ export function AdminDashboard() {
         eyebrow={
           <>
             <Eyebrow tone="live">
-              آخر دورة <bdi dir="ltr">{AGENT_STATUS.lastCycle}</bdi>
+              {t.admin.lastCycle} <Num>{AGENT_STATUS.lastCycle}</Num>
             </Eyebrow>
             <Eyebrow>
-              <bdi dir="ltr">{AGENT_STATUS.host}</bdi>
+              <Code>{AGENT_STATUS.host}</Code>
             </Eyebrow>
           </>
         }
         headline={
           paused.length > 0 ? (
             <>
-              <HeroFigure tone="danger">{paused.length}</HeroFigure> مصدر موقوف
-              <br />
-              يحتاج تدخّلك
+              <HeroFigure tone="danger">{paused.length}</HeroFigure> {t.admin.pausedHead}
             </>
           ) : (
             <>
-              <HeroFigure tone="success">{active.length}</HeroFigure> مصادر تعمل
-              <br />
-              بلا أعطال
+              <HeroFigure tone="success">{active.length}</HeroFigure> {t.admin.healthyHead}
             </>
           )
         }
         lede={
           <>
-            الوكيل يعمل منذ <span className="num font-mono text-ink">{AGENT_STATUS.uptimeDays}</span> يوماً بلا انقطاع،
-            ومتوسط الدورة <span className="num font-mono text-ink">{AGENT_STATUS.cycleSeconds}</span> ثانية.{" "}
-            {paused.length > 0
-              ? `مصدر ${paused[0].short} موقوف مؤقتاً — لا يُفحص حتى يُعاد تفعيله.`
-              : "كل المصادر المفعّلة فُحصت في دورتها الأخيرة."}
+            {t.admin.uptimeLede} <Num className="num font-mono text-ink">{AGENT_STATUS.uptimeDays}</Num>{" "}
+            {t.admin.uptimeLede2} <Num className="num font-mono text-ink">{AGENT_STATUS.cycleSeconds}</Num>{" "}
+            {t.admin.uptimeLede3}{" "}
+            {paused.length > 0 ? (
+              <>
+                <Code>{paused[0].short}</Code> {t.admin.pausedNote}
+              </>
+            ) : (
+              t.admin.allScanned
+            )}
           </>
         }
         actions={
@@ -86,55 +92,55 @@ export function AdminDashboard() {
             {can("scan") && (
               <Button variant="primary" onClick={runScan} loading={running !== null}>
                 {running === null && <ScanSearch size={20} strokeWidth={2} aria-hidden />}
-                شغّل دورة الآن
+                {t.scan.runCycle}
               </Button>
             )}
             <Button variant="ghost" onClick={() => router.push("/sources")}>
               <Radar size={20} strokeWidth={2} aria-hidden />
-              إدارة المصادر
+              {t.admin.manageSources}
             </Button>
           </>
         }
         facts={[
-          { label: "طابور الانتظار", value: AGENT_STATUS.queue },
-          { label: "طلبات مصادر معلّقة", value: pending.length },
-          { label: "محوّل للمراجعة اليدوية", value: escalated }
+          { label: t.admin.queue, value: AGENT_STATUS.queue },
+          { label: t.admin.pendingSources, value: pending.length },
+          { label: t.admin.escalated, value: escalated }
         ]}
       />
 
       <Reveal>
         <MetricBar>
           <StatCard
-            label="مصادر مفعّلة"
+            label={t.admin.activeSources}
             value={`${active.length} / ${SOURCES.length}`}
-            context={paused.length > 0 ? `${paused.length} موقوف مؤقتاً` : "لا مصدر موقوف"}
+            context={paused.length > 0 ? `${paused.length} ${t.admin.pausedCount}` : t.admin.noPaused}
             icon={Radar}
             tone={paused.length > 0 ? "danger" : "success"}
             alert={paused.length > 0}
           />
           <StatCard
-            label="زمن الدورة بالثواني"
+            label={t.admin.cycleSeconds}
             value={AGENT_STATUS.cycleSeconds}
-            context="من الجلب حتى التوقّف بانتظار القرار"
+            context={t.admin.cycleCtx}
             icon={TimerReset}
           />
           <StatCard
-            label="ذاكرة المسرّع"
+            label={t.admin.memory}
             value={`${AGENT_STATUS.memoryUsed} / ${AGENT_STATUS.memoryTotal} GB`}
             context={AGENT_STATUS.accelerator}
             icon={Cpu}
           />
           <StatCard
-            label="دون عتبة الثقة"
+            label={t.admin.belowThreshold}
             value={escalated}
-            context={`ثقة أقل من ${AGENT_STATUS.threshold}% — تُحوَّل للمراجعة اليدوية`}
+            context={`${AGENT_STATUS.threshold}% — ${t.admin.belowThresholdCtx}`}
             icon={ShieldAlert}
           />
         </MetricBar>
       </Reveal>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <Section title="صحة المصادر" sub="آخر فحص لكل مصدر وتكراره المجدول">
+        <Section title={t.admin.sourceHealth} sub={t.admin.sourceHealthSub}>
           <Reveal>
             <Card className="flex flex-col gap-3">
               {SOURCES.map((s) => (
@@ -142,9 +148,9 @@ export function AdminDashboard() {
               ))}
               <CardFoot>
                 <span className="flex flex-wrap items-center justify-between gap-3">
-                  إضافة مصدر أو تفعيله يحتاج موافقة المختص ويُسجَّل في سجل التدقيق.
+                  {t.admin.sourceHealthFoot}
                   <Button variant="secondary" size="sm" onClick={() => router.push("/sources")}>
-                    صفحة المصادر
+                    {t.admin.sourcesPage}
                   </Button>
                 </span>
               </CardFoot>
@@ -156,42 +162,40 @@ export function AdminDashboard() {
           <Reveal index={0}>
             <Card glow={running !== null}>
               <CardHead
-                title="حالة الوكيل"
-                sub={running !== null ? "دورة جارية الآن" : "آخر دورة كاملة"}
+                title={t.admin.agentState}
+                sub={running !== null ? t.admin.cycleRunning : t.admin.lastFullCycle}
                 aside={<Activity size={18} strokeWidth={2} className="text-brand" aria-hidden />}
               />
               <AgentActivity
                 active={running ?? AGENT_STEPS.length - 1}
                 stamps={running === null ? LAST_RUN_STAMPS : undefined}
                 compact
-                note="الوكيل يقف عند المرحلة الخامسة دائماً — لا اعتماد تلقائي ولا إغلاق بند."
+                note={t.admin.agentNote}
               />
             </Card>
           </Reveal>
 
           <Reveal index={1}>
             <Card>
-              <CardHead title="حالة النموذج" sub="ما يُكتب اسمه في كل قيد تدقيق" />
+              <CardHead title={t.admin.modelState} sub={t.admin.modelStateSub} />
               <dl className="flex flex-col gap-3">
-                <StatusRow label="النموذج" value={AGENT_STATUS.model} mono />
-                <StatusRow label="التكميم" value={AGENT_STATUS.quantization} mono />
-                <StatusRow label="نسخة التعليمات" value={AGENT_STATUS.instructions} mono />
-                <StatusRow label="موضع التشغيل" value={AGENT_STATUS.runtime} />
-                <StatusRow label="عتبة الثقة" value={`${AGENT_STATUS.threshold}%`} mono />
+                <StatusRow label={t.admin.modelName} value={AGENT_STATUS.model} mono />
+                <StatusRow label={t.admin.quantization} value={AGENT_STATUS.quantization} mono />
+                <StatusRow label={t.admin.instructions} value={AGENT_STATUS.instructions} mono />
+                <StatusRow label={t.admin.runtime} value={AGENT_STATUS.runtime} />
+                <StatusRow label={t.admin.threshold} value={`${AGENT_STATUS.threshold}%`} mono />
               </dl>
-              <CardFoot>
-                تغيير النموذج أو نسخة التعليمات يُسجَّل في سجل التدقيق، وتبقى القيود القديمة محمولةً على إصدارها.
-              </CardFoot>
+              <CardFoot>{t.admin.modelFoot}</CardFoot>
             </Card>
           </Reveal>
 
           <Reveal index={2}>
             <Card>
-              <CardHead title="العزل" aside={<Boxes size={18} strokeWidth={2} className="text-ink-muted" aria-hidden />} />
-              <p className="font-body text-body-sm text-ink">
-                النواة معزولة: لا منفذ خارجي مفتوح، والنماذج تعمل على عتاد المنشأة. الجلب وحده يخرج إلى صفحات الجهات
-                المنشورة علناً، ولا يحمل معه أي بيانات داخلية.
-              </p>
+              <CardHead
+                title={t.admin.isolation}
+                aside={<Boxes size={18} strokeWidth={2} className="text-ink-muted" aria-hidden />}
+              />
+              <p className="font-body text-body-sm text-ink">{t.admin.isolationBody}</p>
             </Card>
           </Reveal>
         </div>
@@ -201,6 +205,7 @@ export function AdminDashboard() {
 }
 
 function SourceHealth({ source }: { source: Source }) {
+  const t = useT();
   const ok = source.state === "active";
   const warn = source.state === "paused" || source.state === "pending";
   return (
@@ -220,15 +225,11 @@ function SourceHealth({ source }: { source: Source }) {
       </span>
       <span className="shrink-0 text-end">
         {source.lastScan ? (
-          <bdi dir="ltr" className="num block font-mono text-caption text-ink">
-            {source.lastScan}
-          </bdi>
+          <Num className="num block font-mono text-caption text-ink">{source.lastScan}</Num>
         ) : (
-          <span className="block font-body text-caption text-ink-muted">لم يُفحص بعد</span>
+          <span className="block font-body text-caption text-ink-muted">{t.admin.notScanned}</span>
         )}
-        <span className="font-body text-caption text-ink-subtle">
-          <bdi dir="ltr">{source.short}</bdi>
-        </span>
+        <Code className="text-caption text-ink-subtle">{source.short}</Code>
       </span>
     </div>
   );
@@ -240,9 +241,7 @@ function StatusRow({ label, value, mono }: { label: string; value: string; mono?
       <dt className="font-body text-body-sm text-ink-muted">{label}</dt>
       <dd className="text-end font-body text-body-sm text-ink">
         {mono ? (
-          <bdi dir="ltr" className="num font-mono">
-            {value}
-          </bdi>
+          <Num className="num font-mono">{value}</Num>
         ) : (
           value
         )}

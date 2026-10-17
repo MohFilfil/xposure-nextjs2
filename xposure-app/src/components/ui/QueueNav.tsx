@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useT } from "@/components/I18nProvider";
+import { Num } from "@/components/ui/Bidi";
 import { cx } from "@/lib/utils";
 
 /** الاختصار يُتجاهل داخل الحقول: من يكتب سبب رفض لا يقصد الانتقال لتغيير آخر. */
@@ -21,14 +23,13 @@ function isTyping(target: EventTarget | null) {
 export function QueueNav({
   ids,
   currentId,
-  hrefFor,
-  label = "التغيير"
+  hrefFor
 }: {
   ids: string[];
   currentId: string;
   hrefFor: (id: string) => string;
-  label?: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const index = ids.indexOf(currentId);
   const prev = index > 0 ? ids[index - 1] : null;
@@ -53,28 +54,34 @@ export function QueueNav({
   if (index < 0) return null;
 
   return (
-    <nav aria-label={`التنقل بين ${label}ات`} className="flex items-center gap-2 print:hidden">
+    <nav aria-label={t.widgets.queueNav} className="flex items-center gap-2 print:hidden">
       <span className="me-1 font-body text-body-sm text-ink-muted">
-        {label} <span className="font-mono text-ink">{index + 1}</span>
-        <span className="text-ink-subtle"> / {ids.length}</span>
+        {t.common.change}{" "}
+        <Num className="num font-mono">
+          <span className="text-ink">{index + 1}</span>
+          <span className="text-ink-subtle"> / {ids.length}</span>
+        </Num>
       </span>
 
-      {/* في RTL يقع «السابق» على اليمين، فيحمل سهماً متجهاً لليمين */}
+      {/**
+       * السهم يتبع اتجاه القراءة: في RTL «السابق» يمين و«التالي» يسار، وفي LTR
+       * العكس — فيُقلب السهمان معاً بـ ltr:rotate-180 بدل تبديل الأيقونتين.
+       */}
       <QueueButton
         disabled={!prev}
-        label="التغيير السابق"
+        label={t.widgets.prevItem}
         chord="K"
         onClick={() => prev && router.push(hrefFor(prev))}
       >
-        <ChevronRight size={18} strokeWidth={2} aria-hidden />
+        <ChevronRight size={18} strokeWidth={2} aria-hidden className="ltr:rotate-180" />
       </QueueButton>
       <QueueButton
         disabled={!next}
-        label="التغيير التالي"
+        label={t.widgets.nextItem}
         chord="J"
         onClick={() => next && router.push(hrefFor(next))}
       >
-        <ChevronLeft size={18} strokeWidth={2} aria-hidden />
+        <ChevronLeft size={18} strokeWidth={2} aria-hidden className="ltr:rotate-180" />
       </QueueButton>
     </nav>
   );

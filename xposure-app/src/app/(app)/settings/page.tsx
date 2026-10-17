@@ -5,28 +5,18 @@ import { Moon, RotateCcw, Sun } from "lucide-react";
 import { Eyebrow, Page, PageHead } from "@/components/layout/Page";
 import { Button } from "@/components/ui/Button";
 import { Card, CardFoot, CardHead } from "@/components/ui/Card";
-import { Chip } from "@/components/ui/Chip";
+import { Num } from "@/components/ui/Bidi";
 import { Input, Radio } from "@/components/ui/FormControls";
 import { Reveal } from "@/components/motion/Reveal";
 import { useTheme } from "@/components/ThemeProvider";
 import { useDecisions } from "@/components/DecisionsProvider";
 import { useSession } from "@/components/SessionProvider";
-import { ROLES } from "@/lib/roles";
+import { useI18n, useT } from "@/components/I18nProvider";
+import { useRoleCopy } from "@/lib/content";
 import { useToast } from "@/components/ui/Toast";
 import { cx } from "@/lib/utils";
 
 /** الإعدادات لا تحمل إلا ما يخصّ المستخدم: المصادر التنظيمية شاشة عمل قائمة بذاتها. */
-const TABS = [
-  { id: "profile", label: "الملف الشخصي" },
-  { id: "prefs", label: "التفضيلات" }
-];
-
-const LEVELS = [
-  { n: 0, title: "المستوى 0 — مستقل", detail: "يعمل الوكيل بملفات مرفوعة دون أي ربط تقني." },
-  { n: 1, title: "المستوى 1 — قراءة موصلات", detail: "قراءة فقط لسجلات المنتجات والضوابط بحساب خدمة محدود." },
-  { n: 2, title: "المستوى 2 — تنفيذ بموافقة", detail: "إنشاء المهام وتحديث حالاتها بعد اعتماد المختص." }
-];
-
 export default function SettingsPage() {
   const [tab, setTab] = useState("prefs");
   const [level, setLevel] = useState(1);
@@ -34,30 +24,40 @@ export default function SettingsPage() {
   const { theme, toggle } = useTheme();
   const { progress, reset: resetDecisions } = useDecisions();
   const { role, account, can } = useSession();
+  const t = useT();
+  const { lang, setLang } = useI18n();
+  const roleCopy = useRoleCopy();
   const toast = useToast();
 
   return (
     <Page>
       <PageHead
-        title="الإعدادات"
-        eyebrow={<Eyebrow>{role ? ROLES[role].label : ""}</Eyebrow>}
-        lede="إعدادات المستخدم وتفضيلات العرض. ما تغيّره هنا يخصّ حسابك وحده."
+        title={t.settings.title}
+        eyebrow={<Eyebrow>{role ? roleCopy.label(role) : ""}</Eyebrow>}
+        lede={t.settings.lede}
       />
 
-      <Tabs tabs={TABS} value={tab} onChange={setTab} />
+      <Tabs
+        tabs={[
+          { id: "profile", label: t.settings.tabProfile },
+          { id: "prefs", label: t.settings.tabPrefs }
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
 
       {tab === "profile" && (
         <Reveal>
           <Card className="max-w-[640px]">
-            <CardHead title="بيانات المستخدم" />
+            <CardHead title={t.settings.userData} />
             <div className="flex flex-col gap-5">
               {/* القيم تأتي من الجلسة، و key يعيد بناء الحقول عند تبديل الدور فلا تبقى قيمة الدور السابق */}
-              <Input key={`name-${role}`} label="الاسم" defaultValue={account?.name ?? ""} readOnly />
-              <Input key={`role-${role}`} label="الدور" defaultValue={role ? ROLES[role].label : ""} readOnly />
-              <Input key={`mail-${role}`} label="البريد الداخلي" defaultValue={account?.email ?? ""} readOnly />
+              <Input key={`name-${role}-${lang}`} label={t.settings.name} defaultValue={role ? roleCopy.name(role) : ""} readOnly />
+              <Input key={`role-${role}-${lang}`} label={t.settings.role} defaultValue={role ? roleCopy.label(role) : ""} readOnly />
+              <Input key={`mail-${role}`} label={t.settings.email} defaultValue={account?.email ?? ""} readOnly />
             </div>
             <CardFoot>
-              {role ? ROLES[role].scope : ""} الأدوار يديرها مسؤول النظام؛ والتبديل من الشريط العلوي أداة عرض توضيحي وحدها.
+              {role ? roleCopy.scope(role) : ""} {t.settings.profileFoot}
             </CardFoot>
           </Card>
         </Reveal>
@@ -67,22 +67,27 @@ export default function SettingsPage() {
         <div className="flex max-w-[640px] flex-col gap-6">
           <Reveal index={0}>
             <Card>
-              <CardHead title="السمة واللغة" />
+              <CardHead title={t.settings.themeAndLang} />
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="font-body text-body-sm text-ink-muted">سمة الواجهة</span>
+                  <span className="font-body text-body-sm text-ink-muted">{t.settings.uiTheme}</span>
                   <Button variant="secondary" size="sm" onClick={toggle}>
                     {theme === "dark" ? <Sun size={20} strokeWidth={2} aria-hidden /> : <Moon size={20} strokeWidth={2} aria-hidden />}
-                    {theme === "dark" ? "التحويل إلى الفاتح" : "التحويل إلى الداكن"}
+                    {theme === "dark" ? t.settings.toLight : t.settings.toDark}
                   </Button>
                 </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="font-body text-body-sm text-ink-muted">لغة الواجهة</span>
-                  <span className="flex gap-2">
-                    <Chip>العربية — مفعّلة</Chip>
-                    <Chip muted>English — قريباً</Chip>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <span className="font-body text-body-sm text-ink-muted">{t.settings.uiLang}</span>
+                  {/**
+                   * خياران ظاهران لا قائمة منسدلة، وكل اسم مكتوب بلغته هو — من يبحث عن
+                   * الإنجليزية يبحث عن كلمة English لا عن ترجمتها.
+                   */}
+                  <span role="group" aria-label={t.settings.uiLang} className="flex gap-2">
+                    <LangButton active={lang === "ar"} onClick={() => setLang("ar")} label="العربية" />
+                    <LangButton active={lang === "en"} onClick={() => setLang("en")} label="English" />
                   </span>
                 </div>
+                <p className="font-body text-caption text-ink-muted">{t.settings.langNote}</p>
               </div>
             </Card>
           </Reveal>
@@ -90,9 +95,13 @@ export default function SettingsPage() {
           {can("manageAgent") && (
             <Reveal index={1}>
               <Card>
-                <CardHead title="مستوى التبني" />
+                <CardHead title={t.settings.adoptionLevel} />
                 <div className="flex flex-col gap-3">
-                  {LEVELS.map((l) => (
+                  {[
+                    { n: 0, title: t.settings.level0, detail: t.settings.level0Detail },
+                    { n: 1, title: t.settings.level1, detail: t.settings.level1Detail },
+                    { n: 2, title: t.settings.level2, detail: t.settings.level2Detail }
+                  ].map((l) => (
                     <Radio
                       key={l.n}
                       name="adoption"
@@ -107,7 +116,7 @@ export default function SettingsPage() {
                     />
                   ))}
                 </div>
-                <CardFoot>رفع المستوى يحتاج موافقة مسؤول الأمن السيبراني ويُسجَّل في سجل التدقيق.</CardFoot>
+                <CardFoot>{t.settings.adoptionFoot}</CardFoot>
               </Card>
             </Reveal>
           )}
@@ -116,8 +125,8 @@ export default function SettingsPage() {
             <Reveal index={2}>
               <Card>
                 <CardHead
-                  title="بيانات العرض التوضيحي"
-                  sub="القرارات محفوظة في هذا المتصفح وحده"
+                  title={t.settings.demoData}
+                  sub={t.settings.demoDataSub}
                 />
                 {/**
                  * القرارات تُحفظ محلياً حتى لا تتبخّر عند تحديث الصفحة. وما دام العرض
@@ -125,24 +134,22 @@ export default function SettingsPage() {
                  * الأداة مرة عاجزاً عن عرضها من البداية مرة أخرى.
                  */}
                 <p className="font-body text-body-sm text-ink-muted">
-                  بُتَّ في <span className="num font-mono text-ink">{progress.decided}</span> من{" "}
-                  <span className="num font-mono text-ink">{progress.total}</span> تغييراً. عند الربط الفعلي تُكتب هذه
-                  القرارات في قاعدة البيانات وسجل التدقيق، ولا تُمحى أبداً.
+                  {t.settings.demoDataBody1} <Num className="num font-mono text-ink">{progress.decided}</Num>{" "}
+                  {t.settings.demoDataBody2} <Num className="num font-mono text-ink">{progress.total}</Num>{" "}
+                  {t.settings.demoDataBody3}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Button
                     variant="secondary"
                     onClick={() => {
                       resetDecisions();
-                      toast("info", "أُعيدت بيانات العرض إلى حالتها الأولى.");
+                      toast("info", t.settings.resetDone);
                     }}
                   >
                     <RotateCcw size={18} strokeWidth={2} aria-hidden />
-                    إعادة ضبط بيانات العرض
+                    {t.settings.resetDemo}
                   </Button>
-                  <span className="font-body text-body-sm text-ink-subtle">
-                    يمحو القرارات والمهام المُنشأة من هذا المتصفح فقط.
-                  </span>
+                  <span className="font-body text-body-sm text-ink-muted">{t.settings.resetNote}</span>
                 </div>
               </Card>
             </Reveal>
@@ -156,13 +163,13 @@ export default function SettingsPage() {
                 setSaving(true);
                 setTimeout(() => {
                   setSaving(false);
-                  toast("success", "حُفظت التفضيلات.");
+                  toast("success", t.settings.saved);
                 }, 700);
               }}
             >
-              حفظ التفضيلات
+              {t.settings.savePrefs}
             </Button>
-            <span className="font-body text-body-sm text-ink-muted">تُطبَّق فوراً على هذا المستخدم فقط.</span>
+            <span className="font-body text-body-sm text-ink-muted">{t.settings.saveNote}</span>
           </div>
         </div>
       )}
@@ -223,5 +230,24 @@ function Tabs({
         />
       )}
     </div>
+  );
+}
+
+/** خيار لغة: زر لكل لغة، والمفعّل يحمل حدّ brand — لا قائمة منسدلة لخيارين. */
+function LangButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cx(
+        "rounded-md border px-3 py-1.5 font-body text-body-sm transition-colors duration-2",
+        active
+          ? "border-brand bg-[color-mix(in_srgb,var(--brand)_18%,transparent)] font-semibold text-ink"
+          : "border-border bg-surface text-ink-muted hover:border-brand hover:text-ink"
+      )}
+    >
+      {label}
+    </button>
   );
 }

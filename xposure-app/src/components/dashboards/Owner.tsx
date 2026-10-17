@@ -16,7 +16,9 @@ import { EmptyState } from "@/components/ui/BrandMotif";
 import { Reveal } from "@/components/motion/Reveal";
 import { useDecisions } from "@/components/DecisionsProvider";
 import { useSession } from "@/components/SessionProvider";
-import { CHANGES, TASKS } from "@/lib/data";
+import { useT } from "@/components/I18nProvider";
+import { Num, Code } from "@/components/ui/Bidi";
+import { ownerMatches, useContent } from "@/lib/content";
 import type { Task } from "@/lib/types";
 import { daysUntil, dueState } from "@/lib/utils";
 import { PRIORITY_RANK } from "@/lib/vocab";
@@ -34,11 +36,15 @@ export function OwnerDashboard() {
   const router = useRouter();
   const { extraTasks } = useDecisions();
   const { account } = useSession();
+  const t = useT();
+  const { changes, tasks, localizeTask } = useContent();
 
-  const mine = [...TASKS, ...extraTasks].filter((t) => t.owner === account?.name);
-  const open = mine.filter((t) => t.status !== "approved");
-  const overdue = open.filter((t) => daysUntil(t.due) < 0).length;
-  const soon = open.filter((t) => daysUntil(t.due) >= 0 && daysUntil(t.due) <= 45).length;
+  const mine = [...tasks, ...extraTasks.map(localizeTask)].filter((task) =>
+    account ? ownerMatches(task.owner, account.name) : false
+  );
+  const open = mine.filter((task) => task.status !== "approved");
+  const overdue = open.filter((task) => daysUntil(task.due) < 0).length;
+  const soon = open.filter((task) => daysUntil(task.due) >= 0 && daysUntil(task.due) <= 45).length;
   const done = mine.length - open.length;
 
   /* أقرب مهمة مستحقة: هي الجملة التي تفتتح الشاشة، لا عدد المهام */
@@ -48,7 +54,7 @@ export function OwnerDashboard() {
    * الأصول المتأثرة تُجمع من التغييرات التي نشأت عنها مهامه وحدها — لا من كل
    * التغييرات، وإلا قرأ المالك قائمةً لا تخصّه على أنها مسؤوليته.
    */
-  const linked = CHANGES.filter((c) => mine.some((t) => t.change === c.id));
+  const linked = changes.filter((c) => mine.some((task) => task.change === c.id));
   const products = Array.from(new Set(linked.flatMap((c) => c.products)));
   const processes = Array.from(new Set(linked.flatMap((c) => c.processes)));
   const controls = Array.from(new Set(linked.flatMap((c) => c.controls)));
@@ -56,40 +62,48 @@ export function OwnerDashboard() {
   const columns: Column<Task>[] = [
     {
       key: "title",
-      header: "المهمة",
-      render: (t) => (
+      header: t.tasks.colTask,
+      render: (task) => (
         <>
-          <div className="font-medium text-ink">{t.title}</div>
+          <div className="font-medium text-ink">{task.title}</div>
           <div className="num font-mono text-caption text-ink-subtle">
-            <bdi dir="ltr">{t.id}</bdi> · <bdi dir="ltr">{t.change}</bdi>
+            <Code>{task.id}</Code> · <Code>{task.change}</Code>
           </div>
         </>
       )
     },
     {
       key: "due",
-      header: "تاريخ الاستحقاق",
-      render: (t) => {
-        const { tone, label } = dueState(t.due);
+      header: t.tasks.colDue,
+      render: (task) => {
+        const { tone, days } = dueState(task.due);
         return (
           <>
-            <bdi dir="ltr" className="num font-mono">
-              {t.due}
-            </bdi>
-            <div className={`text-caption ${TONE[tone]}`}>{label}</div>
+            <Num className="num font-mono">{task.due}</Num>
+            <div className={`text-caption ${TONE[tone]}`}>
+              {days < 0 ? (
+                <>
+                  {t.tasks.overdueBy} <Num>{Math.abs(days)}</Num> {t.common.days}
+                </>
+              ) : (
+                <>
+                  {t.tasks.within} <Num>{days}</Num> {t.common.days}
+                </>
+              )}
+            </div>
           </>
         );
       },
-      sortValue: (t) => t.due
+      sortValue: (task) => task.due
     },
     {
       key: "priority",
-      header: "الأولوية",
+      header: t.changes.priority,
       hideBelow: "xs",
-      render: (t) => <PriorityBadge priority={t.priority} />,
-      sortValue: (t) => PRIORITY_RANK[t.priority]
+      render: (task) => <PriorityBadge priority={task.priority} />,
+      sortValue: (task) => PRIORITY_RANK[task.priority]
     },
-    { key: "status", header: "الحالة", render: (t) => <StatusBadge status={t.status} /> }
+    { key: "status", header: t.changes.status, render: (task) => <StatusBadge status={task.status} /> }
   ];
 
   return (
@@ -97,42 +111,35 @@ export function OwnerDashboard() {
       <Hero
         eyebrow={
           <>
-            <Eyebrow tone="live">{account?.name}</Eyebrow>
-            <Eyebrow>مهامك وحدها — لا طابور المنشأة</Eyebrow>
+            <Eyebrow tone="live">{mine[0]?.owner ?? account?.name}</Eyebrow>
+            <Eyebrow>{t.owner.onlyMine}</Eyebrow>
           </>
         }
         headline={
           open.length > 0 ? (
             <>
-              <HeroFigure tone={overdue > 0 ? "danger" : "brand"}>{open.length}</HeroFigure> مهمة
-              <br />
-              مفتوحة باسمك
+              <HeroFigure tone={overdue > 0 ? "danger" : "brand"}>{open.length}</HeroFigure>{" "}
+              {t.owner.openTasksHead}
             </>
           ) : (
             <>
-              <HeroFigure tone="success">{mine.length}</HeroFigure> مهمة
-              <br />
-              أُغلقت كلها
+              <HeroFigure tone="success">{mine.length}</HeroFigure> {t.owner.allClosed}
             </>
           )
         }
         lede={
           next ? (
             <>
-              أقربها «{next.title}» وتستحق في{" "}
-              <bdi dir="ltr" className="num font-mono text-ink">
-                {next.due}
-              </bdi>
-              . كل مهمة هنا نشأت عن اعتماد صريح لتغيير تنظيمي، ويمكنك فتح البند الذي تسبّب بها.
+              «{next.title}» — <Num className="num font-mono text-ink">{next.due}</Num>. {t.owner.myTasksSub}
             </>
           ) : (
-            <>لا مهمة مفتوحة باسمك الآن. ستصلك مهمة جديدة فور اعتماد توصية تخصّ عملياتك.</>
+            <>{t.owner.noTasksHint}</>
           )
         }
         actions={
           <Button variant="primary" onClick={() => router.push("/tasks")}>
             <ListChecks size={20} strokeWidth={2} aria-hidden />
-            افتح قائمة مهامي
+            {t.owner.openList}
           </Button>
         }
       />
@@ -140,56 +147,47 @@ export function OwnerDashboard() {
       <Reveal>
         <MetricBar>
           <StatCard
-            label="متأخرة"
+            label={t.tasks.overdue}
             value={overdue}
-            context="تجاوزت موعدها المقترح ولم تُغلق بعد"
+            context={t.tasks.overdueCtx}
             icon={TriangleAlert}
             tone={overdue > 0 ? "danger" : undefined}
             alert={overdue > 0}
           />
-          <StatCard label="تستحق خلال 45 يوماً" value={soon} context="تحتاج جدولة ضمن هذا الشهر" icon={AlarmClock} />
+          <StatCard label={t.tasks.dueSoon} value={soon} context={t.tasks.dueSoonCtx} icon={AlarmClock} />
+          <StatCard label={t.tasks.done} value={done} context={t.tasks.doneCtx} icon={CircleCheck} tone="success" />
           <StatCard
-            label="منجزة"
-            value={done}
-            context="أُغلقت باعتماد المختص، لا بقرار الوكيل"
-            icon={CircleCheck}
-            tone="success"
-          />
-          <StatCard
-            label="بنود تنظيمية تخصّك"
+            label={t.owner.linkedChanges}
             value={linked.length}
-            context="التغييرات التي نشأت عنها مهامك"
+            context={t.owner.linkedChangesCtx}
             icon={Workflow}
           />
         </MetricBar>
       </Reveal>
 
-      <Section title="مهامي" sub="مرتّبة بالأقرب استحقاقاً — اضغط أي مهمة لفتح البند الذي تسبّب بها">
+      <Section title={t.owner.myTasks} sub={t.owner.myTasksSub}>
         {mine.length > 0 ? (
           <DataTable
-            caption="مهام هذا المستخدم"
+            caption={t.owner.myTasks}
             columns={columns}
             rows={[...mine].sort((a, b) => a.due.localeCompare(b.due))}
-            onRowClick={(t) => router.push(`/changes/${t.change}`)}
+            onRowClick={(task) => router.push(`/changes/${task.change}`)}
           />
         ) : (
-          <EmptyState
-            title="لا مهام باسمك"
-            description="تُنشأ المهام بعد اعتماد المختص لتوصية على تغيير تنظيمي، وتُسند إلى مالك العملية المعني."
-          />
+          <EmptyState title={t.owner.noTasks} description={t.owner.noTasksHint} />
         )}
       </Section>
 
-      <Section title="ما يتأثر بعملك" sub="الأصول التي تمسّها مهامك المفتوحة — لا كل أصول المنشأة">
+      <Section title={t.owner.affected} sub={t.owner.affectedSub}>
         <div className="grid gap-6 lg:grid-cols-3">
           <Reveal index={0} className="h-full">
-            <AssetCard icon={Boxes} title="منتجات" items={products} />
+            <AssetCard icon={Boxes} title={t.owner.products} items={products} />
           </Reveal>
           <Reveal index={1} className="h-full">
-            <AssetCard icon={Workflow} title="عمليات" items={processes} />
+            <AssetCard icon={Workflow} title={t.owner.processes} items={processes} />
           </Reveal>
           <Reveal index={2} className="h-full">
-            <AssetCard icon={ListChecks} title="ضوابط داخلية" items={controls} />
+            <AssetCard icon={ListChecks} title={t.owner.controls} items={controls} />
           </Reveal>
         </div>
       </Section>
@@ -206,6 +204,7 @@ function AssetCard({
   title: string;
   items: string[];
 }) {
+  const t = useT();
   return (
     <Card className="flex h-full flex-col">
       <CardHead
@@ -221,10 +220,10 @@ function AssetCard({
       ) : (
         <p className="flex items-center gap-2 font-body text-body-sm text-ink-muted">
           <Icon size={18} strokeWidth={2} aria-hidden />
-          لا شيء متأثر من هذا النوع
+          {t.owner.nothingAffected}
         </p>
       )}
-      <CardFoot>مصدرها سجلات المنشأة — آخر تحديث 2026-09-14.</CardFoot>
+      <CardFoot>{t.owner.assetsFoot}</CardFoot>
     </Card>
   );
 }

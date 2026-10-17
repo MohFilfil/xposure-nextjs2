@@ -1,5 +1,7 @@
 import { Minus, Plus } from "lucide-react";
 import type { DiffSegment } from "@/lib/types";
+import { useT } from "@/components/I18nProvider";
+import { Num } from "@/components/ui/Bidi";
 import { cx } from "@/lib/utils";
 
 /**
@@ -13,7 +15,7 @@ import { cx } from "@/lib/utils";
  */
 function Segments({ segments }: { segments: DiffSegment[] }) {
   if (segments.length === 0) {
-    return <span className="text-ink-muted">لا يوجد بند مقابل في الإصدار السابق — هذا متطلب مستحدث بالكامل.</span>;
+    return <EmptySide />;
   }
   return (
     <>
@@ -96,6 +98,7 @@ export function DiffText({
   previousLabel: string;
   currentLabel: string;
 }) {
+  const t = useT();
   const added = current.filter((s) => s.kind === "add").length;
   const removed = previous.filter((s) => s.kind === "del").length;
 
@@ -117,24 +120,35 @@ export function DiffText({
         {added > 0 && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[color-mix(in_srgb,var(--success)_14%,transparent)] px-3 py-1 font-body text-caption text-success">
             <Plus size={13} strokeWidth={3} aria-hidden />
-            {added} إضافة
+            <Num>{added}</Num> {t.widgets.additions}
           </span>
         )}
         {removed > 0 && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[color-mix(in_srgb,var(--danger)_14%,transparent)] px-3 py-1 font-body text-caption text-danger">
             <Minus size={13} strokeWidth={3} aria-hidden />
-            {removed} حذف
+            <Num>{removed}</Num> {t.widgets.removals}
           </span>
         )}
         {added === 0 && removed === 0 && (
-          <span className="font-body text-caption text-ink-muted">لا فروق داخل نص البند نفسه.</span>
+          <span className="font-body text-caption text-ink-muted">{t.widgets.noInnerDiff}</span>
         )}
       </div>
 
+      {/**
+       * ترتيب العمودين يتبع اتجاه القراءة: «الجديد» يقع دائماً على حافة البداية
+       * (يمين العربية، يسار الإنجليزية) لأنه النص الذي يُقرأ أولاً ويُقرَّر عليه.
+       * قلبه مع اللغة لا يكسر القاعدة — بل هو ما يحفظها.
+       */}
       <div className="grid items-start gap-4 md:grid-cols-2">
         <Column label={cur.name} version={cur.version} segments={current} current />
         <Column label={prev.name} version={prev.version} segments={previous} />
       </div>
     </div>
   );
+}
+
+/** الجانب الفارغ: متطلب مستحدث لا مقابل له في الإصدار السابق. */
+function EmptySide() {
+  const t = useT();
+  return <span className="text-ink-muted">{t.widgets.noPreviousClause}</span>;
 }

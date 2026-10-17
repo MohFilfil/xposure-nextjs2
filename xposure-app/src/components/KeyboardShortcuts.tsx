@@ -6,15 +6,17 @@ import { Keyboard, X } from "lucide-react";
 import { useCommandPalette } from "@/components/ui/CommandPalette";
 import { useTheme } from "@/components/ThemeProvider";
 import { useSession } from "@/components/SessionProvider";
+import { useT } from "@/components/I18nProvider";
+import type { Dict } from "@/lib/i18n/ar";
 import { allowsPath, type Role } from "@/lib/roles";
 
 /** تسلسل `g` ثم حرف — نمط التنقل المعتاد في أدوات المراجعة (GitHub، Linear). */
-const GOTO: Record<string, { href: string; label: string }> = {
-  d: { href: "/dashboard", label: "لوحة التحكم" },
-  c: { href: "/changes", label: "التغييرات" },
-  t: { href: "/tasks", label: "المهام" },
-  a: { href: "/audit", label: "سجل التدقيق" },
-  s: { href: "/settings", label: "الإعدادات" }
+const GOTO: Record<string, { href: string }> = {
+  d: { href: "/dashboard" },
+  c: { href: "/changes" },
+  t: { href: "/tasks" },
+  a: { href: "/audit" },
+  s: { href: "/settings" }
 };
 
 /** مهلة إكمال التسلسل: بعدها يُنسى حرف `g` فلا يُفسَّر ضغط لاحق بريء كأمر تنقّل. */
@@ -37,6 +39,7 @@ export function KeyboardShortcuts() {
   const openPalette = useCommandPalette();
   const { toggle } = useTheme();
   const { role } = useSession();
+  const t = useT();
   const [sheet, setSheet] = useState(false);
   const [chord, setChord] = useState(false);
 
@@ -97,46 +100,51 @@ export function KeyboardShortcuts() {
           role="status"
         >
           <kbd className="rounded-sm border border-border px-1.5 font-mono text-ink">g</kbd>
-          <span>ثم د/ت/م/س/إ — أو أي حرف للإلغاء</span>
+          <span>{t.shortcuts.chordHint}</span>
         </div>
       )}
 
-      {sheet && <ShortcutsSheet onClose={close} role={role} />}
+      {sheet && <ShortcutsSheet onClose={close} role={role} t={t} />}
     </>
   );
 }
 
-const GROUPS: Array<{ title: string; items: Array<{ keys: string[]; label: string; href?: string }> }> = [
-  {
-    title: "عام",
-    items: [
-      { keys: ["Ctrl", "K"], label: "لوحة الأوامر — بحث شامل وتنقّل" },
-      { keys: ["/"], label: "فتح البحث مباشرة" },
-      { keys: ["?"], label: "عرض هذه القائمة" },
-      { keys: ["Shift", "T"], label: "تبديل السمة بين الداكن والفاتح" },
-      { keys: ["Esc"], label: "إغلاق أي لوحة أو نافذة مفتوحة" }
-    ]
-  },
-  {
-    title: "التنقل",
-    items: [
-      { keys: ["g", "d"], label: "لوحة التحكم", href: "/dashboard" },
-      { keys: ["g", "c"], label: "التغييرات", href: "/changes" },
-      { keys: ["g", "t"], label: "المهام", href: "/tasks" },
-      { keys: ["g", "a"], label: "سجل التدقيق", href: "/audit" },
-      { keys: ["g", "s"], label: "الإعدادات", href: "/settings" }
-    ]
-  },
-  {
-    title: "داخل شاشة مراجعة تغيير",
-    items: [
-      { keys: ["j"], label: "التغيير التالي في القائمة" },
-      { keys: ["k"], label: "التغيير السابق في القائمة" }
-    ]
-  }
-];
+/**
+ * مجموعات الاختصارات — تُبنى من المعجم لا من نصّ مكتوب، وتُفلتر بمسارات الدور.
+ */
+function groupsOf(t: Dict) {
+  return [
+    {
+      title: t.shortcuts.general,
+      items: [
+        { keys: ["Ctrl", "K"], label: t.shortcuts.palette },
+        { keys: ["/"], label: t.shortcuts.openSearch },
+        { keys: ["?"], label: t.shortcuts.showList },
+        { keys: ["Shift", "T"], label: t.shortcuts.toggleTheme },
+        { keys: ["Esc"], label: t.shortcuts.closeAny }
+      ] as Array<{ keys: string[]; label: string; href?: string }>
+    },
+    {
+      title: t.shortcuts.navigation,
+      items: [
+        { keys: ["g", "d"], label: t.nav.dashboard, href: "/dashboard" },
+        { keys: ["g", "c"], label: t.nav.changes, href: "/changes" },
+        { keys: ["g", "t"], label: t.nav.tasks, href: "/tasks" },
+        { keys: ["g", "a"], label: t.nav.audit, href: "/audit" },
+        { keys: ["g", "s"], label: t.nav.settings, href: "/settings" }
+      ]
+    },
+    {
+      title: t.shortcuts.inReview,
+      items: [
+        { keys: ["j"], label: t.shortcuts.nextChange },
+        { keys: ["k"], label: t.shortcuts.prevChange }
+      ] as Array<{ keys: string[]; label: string; href?: string }>
+    }
+  ];
+}
 
-function ShortcutsSheet({ onClose, role }: { onClose: () => void; role: Role | null }) {
+function ShortcutsSheet({ onClose, role, t }: { onClose: () => void; role: Role | null; t: Dict }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -155,18 +163,18 @@ function ShortcutsSheet({ onClose, role }: { onClose: () => void; role: Role | n
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="اختصارات لوحة المفاتيح"
+        aria-label={t.shortcuts.title}
         className="glass flex max-h-[80vh] w-full max-w-[560px] animate-scale-in flex-col overflow-y-auto rounded-lg border p-6 shadow-lg"
       >
         <div className="mb-5 flex items-start justify-between gap-4">
           <h2 className="flex items-center gap-2 font-display text-h1 text-ink">
             <Keyboard size={24} strokeWidth={2} className="text-brand" aria-hidden />
-            اختصارات لوحة المفاتيح
+            {t.shortcuts.title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="إغلاق"
+            aria-label={t.common.close}
             className="-me-1 rounded-md p-1 text-ink-muted transition-colors duration-1 hover:bg-surface-overlay hover:text-ink"
           >
             <X size={20} strokeWidth={2} aria-hidden />
@@ -175,7 +183,8 @@ function ShortcutsSheet({ onClose, role }: { onClose: () => void; role: Role | n
 
         <div className="flex flex-col gap-6">
           {/* القائمة تذكر ما يعمل لهذا الدور وحده — اختصار معروض ولا يعمل أسوأ من اختصار مخفي */}
-          {GROUPS.map((g) => ({ ...g, items: g.items.filter((it) => !it.href || !role || allowsPath(role, it.href)) }))
+          {groupsOf(t)
+            .map((g) => ({ ...g, items: g.items.filter((it) => !it.href || !role || allowsPath(role, it.href)) }))
             .filter((g) => g.items.length > 0)
             .map((g) => (
             <section key={g.title}>
@@ -205,7 +214,7 @@ function ShortcutsSheet({ onClose, role }: { onClose: () => void; role: Role | n
         </div>
 
         <p className="mt-6 border-t border-hairline pt-3 font-body text-caption text-ink-muted">
-          كل اختصار هنا له مقابل مرئي في الواجهة — الاختصارات تختصر الطريق ولا تفتح باباً وحيداً.
+          {t.shortcuts.foot}
         </p>
       </div>
     </div>

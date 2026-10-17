@@ -1,23 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { Download, ShieldCheck } from "lucide-react";
+import { Download, FileLock2, ListChecks, ShieldCheck, UserSearch } from "lucide-react";
 import { Eyebrow, Page, PageHead } from "@/components/layout/Page";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, CardHead } from "@/components/ui/Card";
+import { Num } from "@/components/ui/Bidi";
 import { Input } from "@/components/ui/FormControls";
 import { EmptyState } from "@/components/ui/BrandMotif";
 import { Reveal } from "@/components/motion/Reveal";
 import { useToast } from "@/components/ui/Toast";
 import { useDecisions } from "@/components/DecisionsProvider";
 import { useSession } from "@/components/SessionProvider";
-import { AUDIT } from "@/lib/data";
+import { useT } from "@/components/I18nProvider";
+import { useContent } from "@/lib/content";
 
 export default function AuditPage() {
   const toast = useToast();
   const { auditExtra } = useDecisions();
   const { can } = useSession();
-  const all = [...AUDIT, ...auditExtra];
+  const t = useT();
+  const { audit } = useContent();
+  const all = [...audit, ...auditExtra];
   const [query, setQuery] = useState("");
   const [exporting, setExporting] = useState(false);
 
@@ -27,43 +31,76 @@ export default function AuditPage() {
     setExporting(true);
     setTimeout(() => {
       setExporting(false);
-      toast("success", "صُدِّر سجل التدقيق إلى مجلد التقارير الداخلي.");
+      toast("success", t.audit.exported);
     }, 900);
   }
 
   return (
     <Page>
       <PageHead
-        title="سجل التدقيق"
+        title={t.audit.title}
         eyebrow={
           <>
-            <Eyebrow tone="live">{all.length} قيداً — غير قابل للتعديل</Eyebrow>
-            <Eyebrow>يشمل اسم النموذج وإصداره</Eyebrow>
+            <Eyebrow tone="live">
+              <Num>{all.length}</Num> {t.audit.immutableCount}
+            </Eyebrow>
+            <Eyebrow>{t.audit.includesModel}</Eyebrow>
           </>
         }
-        lede="من فعل ماذا ومتى، مع اسم النموذج وإصداره والتعليمات المستخدمة. السجل غير قابل للتعديل أو الحذف."
+        lede={t.audit.lede}
         action={
           can("export") ? (
             <Button variant="secondary" loading={exporting} onClick={exportLog}>
               {!exporting && <Download size={20} strokeWidth={2} aria-hidden />}
-              تصدير السجل
+              {t.audit.exportLog}
             </Button>
           ) : undefined
         }
       />
 
+      {/**
+       * ثلاثة ألواح تُجيب أسئلة المدقّق قبل أن يسأل: لمن هذه الصفحة، وما الذي
+       * يُسجَّل فيها، ولماذا لا تُعدَّل. السجل بلا هذا الشرح يُقرأ كقائمة أحداث؛
+       * ومعه يُقرأ كأداة إثبات.
+       */}
+      <Reveal>
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card className="h-full">
+            <CardHead
+              title={t.audit.forWhom}
+              aside={<UserSearch size={18} strokeWidth={2} className="text-ink-muted" aria-hidden />}
+            />
+            <p className="font-body text-body-sm text-ink">{t.audit.forWhomBody}</p>
+          </Card>
+          <Card className="h-full">
+            <CardHead
+              title={t.audit.whatIsRecorded}
+              aside={<ListChecks size={18} strokeWidth={2} className="text-ink-muted" aria-hidden />}
+            />
+            <p className="font-body text-body-sm text-ink">{t.audit.whatIsRecordedBody}</p>
+          </Card>
+          <Card className="h-full">
+            <CardHead
+              title={t.audit.immutability}
+              aside={<FileLock2 size={18} strokeWidth={2} className="text-ink-muted" aria-hidden />}
+            />
+            <p className="font-body text-body-sm text-ink">{t.audit.immutabilityBody}</p>
+          </Card>
+        </div>
+      </Reveal>
+
       <div className="flex flex-wrap items-end gap-4">
         <Input
-          label="بحث في السجل"
+          label={t.audit.searchLabel}
           type="search"
-          placeholder="اسم المستخدم، أو كلمة من وصف الإجراء"
+          placeholder={t.audit.searchPlaceholder}
           className="max-w-[420px]"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <span className="flex items-center gap-2 pb-3 font-body text-body-sm text-ink-muted">
           <ShieldCheck size={18} strokeWidth={2} className="text-success" aria-hidden />
-          كل قيد موقّع ومرتبط بهوية المستخدم
+          {t.audit.signed}
         </span>
       </div>
 
@@ -91,7 +128,7 @@ export default function AuditPage() {
                   style={{ insetInlineStart: 0 }}
                 />
                 <span className="grid gap-2 border-b border-hairline py-3 md:grid-cols-[148px_1fr] md:gap-4">
-                  <span className="font-mono text-body-sm text-ink-muted">{entry.time}</span>
+                  <Num className="num font-mono text-body-sm text-ink-muted">{entry.time}</Num>
                   <span>
                     <span className="block font-body text-body-sm text-ink">{entry.what}</span>
                     <span className="block font-body text-caption text-ink-muted">{entry.who}</span>
@@ -102,7 +139,7 @@ export default function AuditPage() {
           </ol>
         </Card>
       ) : (
-        <EmptyState title="لا نتائج مطابقة" description="لا يوجد سجل يطابق كلمة البحث الحالية." />
+        <EmptyState title={t.common.noResults} description={t.audit.noMatch} />
       )}
     </Page>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Info, X, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -31,6 +32,8 @@ const TONE: Record<ToastKind, { border: string; color: string; icon: LucideIcon 
  * ليضغط زر الإغلاق لا يجوز أن يختفي النص من تحته.
  */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  /* عنصر التنبيه نفسه يُسمّى t داخل الحلقة، فاسم المعجم هنا dict تفادياً للتظليل */
+  const dict = useT();
   const [items, setItems] = useState<ToastItem[]>([]);
   const timers = useRef(new Map<number, { id: ReturnType<typeof setTimeout>; endsAt: number }>());
 
@@ -110,7 +113,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => dismiss(t.id)}
-                aria-label="إغلاق التنبيه"
+                aria-label={dict.common.close}
                 className="-me-1 -mt-1 shrink-0 rounded-md p-1 text-ink-subtle transition-colors duration-1 hover:bg-surface-overlay hover:text-ink"
               >
                 <X size={16} strokeWidth={2} aria-hidden />

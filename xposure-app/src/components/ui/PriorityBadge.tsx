@@ -1,9 +1,12 @@
+"use client";
+
 import type { Priority } from "@/lib/types";
-import { PRIORITY_LABEL } from "@/lib/vocab";
+import { useT } from "@/components/I18nProvider";
 import { cx } from "@/lib/utils";
 
 /**
  * شكل حبة الدواء (radius-full) إلزامي — يفرّقها عن StatusBadge المستطيلة في نفس الصف.
+ * اللون الدلالي محجوز لهذه الشارة وحدها في الصف: الحالة محايدة بعد أن تزاحم اللونان.
  * «متابعة» محايدة عمداً: لا تُلوَّن success لأن الأخضر محجوز لمعنى «معتمد».
  * لا يُستخدم danger لأي أولوية غير «حرج».
  * «حرج» وحده يحمل هالة خفيفة — تمييز ثالث فوق اللون والنص، يُقرأ حتى بطرف العين.
@@ -16,6 +19,7 @@ const TONE: Record<Priority, string> = {
 };
 
 export function PriorityBadge({ priority, size = "sm" }: { priority: Priority; size?: "sm" | "lg" }) {
+  const t = useT();
   return (
     <span
       className={cx(
@@ -24,7 +28,7 @@ export function PriorityBadge({ priority, size = "sm" }: { priority: Priority; s
         TONE[priority]
       )}
     >
-      {PRIORITY_LABEL[priority]}
+      {t.priority[priority]}
     </span>
   );
 }

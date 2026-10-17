@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { I18nProvider } from "@/components/I18nProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { DecisionsProvider } from "@/components/DecisionsProvider";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -24,11 +25,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl" data-theme="dark" className={`${plexArabic.variable} ${plexMono.variable}`}>
       <body>
         <ThemeProvider>
-          <SessionProvider>
-            <DecisionsProvider>
-              <ToastProvider>{children}</ToastProvider>
-            </DecisionsProvider>
-          </SessionProvider>
+          <I18nProvider>
+            <SessionProvider>
+              <DecisionsProvider>
+                <ToastProvider>{children}</ToastProvider>
+              </DecisionsProvider>
+            </SessionProvider>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -9,12 +9,15 @@ export function daysUntil(isoDate: string) {
   return Math.round((new Date(`${isoDate}T00:00:00`).getTime() - TODAY.getTime()) / 86_400_000);
 }
 
-/** لون + نص معاً — لا يُعتمد على اللون وحده لتمييز حالة الموعد. */
-export function dueState(isoDate: string): { tone: "danger" | "warning" | "success"; label: string } {
+/**
+ * نغمة الموعد وعدد أيامه. النص يُبنى في الواجهة من المعجم لا هنا:
+ * الواجهة بلغتين، واللون وحده لا يكفي في أي منهما — فيبقى الرقم مقروناً بنصّ دائماً.
+ */
+export function dueState(isoDate: string): { tone: "danger" | "warning" | "success"; days: number } {
   const days = daysUntil(isoDate);
-  if (days < 0) return { tone: "danger", label: `متأخرة ${Math.abs(days)} يوماً` };
-  if (days <= 45) return { tone: "warning", label: `خلال ${days} يوماً` };
-  return { tone: "success", label: `خلال ${days} يوماً` };
+  if (days < 0) return { tone: "danger", days };
+  if (days <= 45) return { tone: "warning", days };
+  return { tone: "success", days };
 }
 
 export function stamp(date = new Date()) {

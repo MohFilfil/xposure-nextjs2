@@ -15,7 +15,9 @@ import { Gauge } from "@/components/ui/Gauge";
 import { DeadlineTimeline } from "@/components/ui/DeadlineTimeline";
 import { Reveal } from "@/components/motion/Reveal";
 import { useDecisions } from "@/components/DecisionsProvider";
-import { CHANGES, COMPANY, TASKS } from "@/lib/data";
+import { useT } from "@/components/I18nProvider";
+import { Num, Code, DocArrow } from "@/components/ui/Bidi";
+import { useContent } from "@/lib/content";
 import type { RegChange } from "@/lib/types";
 import { daysUntil } from "@/lib/utils";
 
@@ -29,6 +31,8 @@ import { daysUntil } from "@/lib/utils";
 export function ExecDashboard() {
   const router = useRouter();
   const { statusOf } = useDecisions();
+  const t = useT();
+  const { changes: CHANGES, tasks: TASKS, company } = useContent();
 
   const isOpen = (c: RegChange) => ["new", "pending"].includes(statusOf(c));
   const criticalOpen = CHANGES.filter((c) => c.priority === "critical" && isOpen(c));
@@ -50,30 +54,26 @@ export function ExecDashboard() {
   const columns: Column<RegChange>[] = [
     {
       key: "title",
-      header: "البند الحرج",
+      header: t.exec.criticalColumn,
       render: (c) => (
         <>
           <div className="font-medium text-ink">{c.title}</div>
           <div className="num mt-0.5 font-mono text-caption text-ink-subtle">
-            <bdi dir="ltr">{c.clause}</bdi> · <bdi dir="ltr">{c.docTo}</bdi>
+            <Code>{c.clause}</Code> · <Code>{c.docTo}</Code>
           </div>
         </>
       )
     },
-    { key: "status", header: "الحالة", render: (c) => <StatusBadge status={statusOf(c)} /> },
+    { key: "status", header: t.changes.status, render: (c) => <StatusBadge status={statusOf(c)} /> },
     {
       key: "effective",
-      header: "تاريخ السريان",
+      header: t.changes.colEffective,
       hideBelow: "sm",
-      render: (c) => (
-        <span className="num font-mono">
-          <bdi dir="ltr">{c.effective}</bdi>
-        </span>
-      )
+      render: (c) => <Num className="num font-mono">{c.effective}</Num>
     },
     {
       key: "owner",
-      header: "المالك المقترح",
+      header: t.exec.proposedOwner,
       hideBelow: "sm",
       render: (c) => c.owner.split(" — ")[0]
     }
@@ -85,61 +85,53 @@ export function ExecDashboard() {
         eyebrow={
           <>
             <Eyebrow tone="live">
-              الوكيل يعمل — آخر فحص <bdi dir="ltr">2026-09-18 05:00</bdi>
+              {t.dashboard.agentLive} <Num>2026-09-18 05:00</Num>
             </Eyebrow>
             <Eyebrow>
-              <bdi dir="ltr">ECC-1:2018 → ECC-2:2024</bdi>
+              <DocArrow from="ECC-1:2018" to="ECC-2:2024" />
             </Eyebrow>
           </>
         }
         headline={
           criticalOpen.length > 0 ? (
             <>
-              <HeroFigure tone="danger">{criticalOpen.length}</HeroFigure> بنود حرجة
-              <br />
-              ما زالت بلا قرار
+              <HeroFigure tone="danger">{criticalOpen.length}</HeroFigure> {t.dashboard.criticalOpenHead}
             </>
           ) : (
             <>
-              <HeroFigure tone="success">{CHANGES.length}</HeroFigure> بنداً
-              <br />
-              بُتَّ في جميعها
+              <HeroFigure tone="success">{CHANGES.length}</HeroFigure> {t.dashboard.allDecided}
             </>
           )
         }
         lede={
           nearest ? (
             <>
-              أقرب موجة سريان في{" "}
-              <bdi dir="ltr" className="num font-mono text-ink">
-                {nearest.date}
-              </bdi>{" "}
-              — بعد <span className="num font-mono text-ink">{nearest.days}</span> يوماً، ويستحق فيها{" "}
-              {nearest.items.length} بنداً دفعةً واحدة. {COMPANY}.
+              {t.exec.upcoming}: <Num className="num font-mono text-ink">{nearest.date}</Num> — <Num>{nearest.days}</Num>{" "}
+              {t.common.days}, <Num>{nearest.items.length}</Num> {t.common.items}. {company}.
             </>
           ) : (
-            <>{COMPANY}.</>
+            <>{company}.</>
           )
         }
         actions={
           <Button variant="primary" onClick={() => router.push("/changes?priority=critical")}>
             <AlertTriangle size={20} strokeWidth={2} aria-hidden />
-            اعرض البنود الحرجة
+            {t.exec.showCritical}
           </Button>
         }
         aside={
           <Card className="w-full xl:w-[300px]">
-            <Gauge value={78} size={188} label="درجة الامتثال" />
+            <Gauge value={78} size={188} label={t.dashboard.complianceScore} />
             <dl className="mt-5 flex flex-col gap-3">
-              <ScoreRow label="ضوابط مستوفاة" value="39 / 50" tone="var(--success)" />
-              <ScoreRow label="فجوات مفتوحة" value="11 / 50" tone="var(--danger)" />
+              <ScoreRow label={t.dashboard.controlsMet} value="39 / 50" tone="var(--success)" />
+              <ScoreRow label={t.dashboard.gapsOpen} value="11 / 50" tone="var(--danger)" />
             </dl>
-            <CardFoot>الضوابط المستوفاة فعلياً، لا التغييرات المراجَعة.</CardFoot>
+            <CardFoot>{t.dashboard.scoreFoot}</CardFoot>
           </Card>
         }
         facts={[
           {
-            label: "بُتَّ فيه",
+            label: t.exec.decidedFact,
             /* الكسر معزول باتجاه LTR — «3 / 12» داخل نص عربي ينقلب إلى «12 / 3» */
             value: (
               <bdi dir="ltr">
@@ -147,38 +139,38 @@ export function ExecDashboard() {
               </bdi>
             )
           },
-          { label: "مهام متأخرة", value: overdueTasks },
-          { label: "موجات سريان قادمة", value: waves.length }
+          { label: t.exec.overdueTasks, value: overdueTasks },
+          { label: t.exec.upcomingWaves, value: waves.length }
         ]}
       />
 
       <Reveal>
         <MetricBar>
           <StatCard
-            label="قضايا حرجة مفتوحة"
+            label={t.dashboard.metricCritical}
             value={criticalOpen.length}
-            context="بلا قرار بعد — من أصل 4 بنود حرجة مرصودة"
+            context={t.dashboard.metricCriticalCtx}
             icon={AlertTriangle}
             tone={criticalOpen.length > 0 ? "danger" : "success"}
             alert={criticalOpen.length > 0}
           />
           <StatCard
-            label="بانتظار قرار بشري"
+            label={t.dashboard.metricAwaiting}
             value={awaiting}
-            context="لا يُغلق الوكيل أي بند من تلقائه"
+            context={t.dashboard.metricAwaitingCtx}
             icon={Stamp}
           />
           <StatCard
-            label="يوماً حتى أقرب سريان"
+            label={t.exec.daysToNearest}
             value={nearest ? nearest.days : 0}
-            context={nearest ? `${nearest.date} · ${nearest.items.length} بنداً تستحق معاً` : "لا مواعيد مرصودة"}
+            context={nearest ? `${nearest.date} · ${nearest.items.length}` : t.common.none}
             icon={CalendarClock}
             tone={nearest && nearest.days <= 120 ? "danger" : undefined}
           />
           <StatCard
-            label="مهام متأخرة"
+            label={t.exec.overdueTasks}
             value={overdueTasks}
-            context="تجاوزت موعدها المقترح ولم تُغلق"
+            context={t.tasks.overdueCtx}
             icon={ListChecks}
             tone={overdueTasks > 0 ? "danger" : "success"}
           />
@@ -186,11 +178,11 @@ export function ExecDashboard() {
       </Reveal>
 
       <Section
-        title="مواعيد السريان القادمة"
-        sub="التواريخ ليست موزّعة — إنها متكدّسة. كل عنقود موجة عمل واحدة."
+        title={t.exec.upcoming}
+        sub={t.dashboard.deadlineSub}
         aside={
           <span className="num font-mono text-caption text-ink-subtle">
-            المرجع: <bdi dir="ltr">2026-09-18</bdi>
+            {t.common.reference}: <Num>2026-09-18</Num>
           </span>
         }
       >
@@ -198,41 +190,35 @@ export function ExecDashboard() {
           <Card>
             <DeadlineTimeline changes={CHANGES} />
             <CardFoot>
-              {waves.length} موجة قادمة. أقربها{" "}
-              <bdi dir="ltr" className="num font-mono text-ink">
-                {nearest?.date}
-              </bdi>{" "}
-              — {nearest?.open ?? 0} بنداً فيها ما زال بلا قرار.
+              <Num>{waves.length}</Num> {t.exec.upcomingWaves} — <Num className="num font-mono text-ink">{nearest?.date}</Num>,{" "}
+              <Num>{nearest?.open ?? 0}</Num> {t.changes.waveAwaiting}.
             </CardFoot>
           </Card>
         </Reveal>
       </Section>
 
       <Section
-        title="البنود الحرجة المفتوحة"
-        sub="ما قد يُسأل عنه مجلس الإدارة قبل غيره"
+        title={t.exec.criticalOpen}
+        sub={t.exec.criticalOpenSub}
         aside={
           <Button variant="secondary" size="sm" onClick={() => router.push("/changes")}>
-            عرض كل التغييرات
-            <ChevronLeft size={18} strokeWidth={2} aria-hidden />
+            {t.exec.viewAllChanges}
+            <ChevronLeft size={18} strokeWidth={2} aria-hidden className="ltr:rotate-180" />
           </Button>
         }
       >
         {criticalOpen.length > 0 ? (
           <DataTable
-            caption="البنود الحرجة التي لم يُبتّ فيها"
+            caption={t.exec.criticalOpen}
             columns={columns}
             rows={criticalOpen}
             onRowClick={(c) => router.push(`/changes/${c.id}`)}
           />
         ) : (
           <Card>
-            <CardHead title="لم يبقَ بند حرج بلا قرار" aside={<PriorityBadge priority="critical" />} />
-            <p className="font-body text-body text-ink">
-              بُتَّ في البنود الحرجة الأربعة كلها، وكل قرار مسجَّل باسم صاحبه في سجل التدقيق. ما يبقى عملاً تنفيذياً
-              هو المهام المنبثقة عنها.
-            </p>
-            <CardFoot>سيظهر هنا أول بند حرج جديد فور رصده في الفحص القادم.</CardFoot>
+            <CardHead title={t.exec.noCriticalLeft} aside={<PriorityBadge priority="critical" />} />
+            <p className="font-body text-body text-ink">{t.exec.noCriticalBody}</p>
+            <CardFoot>{t.exec.noCriticalFoot}</CardFoot>
           </Card>
         )}
       </Section>
@@ -247,9 +233,7 @@ function ScoreRow({ label, value, tone }: { label: string; value: string; tone: 
         <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: tone }} />
         {label}
       </span>
-      <bdi dir="ltr" className="num font-mono text-body-sm font-semibold text-ink">
-        {value}
-      </bdi>
+      <Num className="num font-mono text-body-sm font-semibold text-ink">{value}</Num>
     </div>
   );
 }

@@ -10,7 +10,9 @@ import { Card, CardFoot, CardHead } from "@/components/ui/Card";
 import { MetricBar, StatCard } from "@/components/ui/StatCard";
 import { Reveal } from "@/components/motion/Reveal";
 import { useDecisions } from "@/components/DecisionsProvider";
-import { AUDIT, CHANGES } from "@/lib/data";
+import { useT } from "@/components/I18nProvider";
+import { Num } from "@/components/ui/Bidi";
+import { useContent } from "@/lib/content";
 
 /**
  * شاشة المدقّق. لا تملك زراً واحداً يغيّر حالة شيء — وهذا هو جوهرها:
@@ -20,14 +22,24 @@ import { AUDIT, CHANGES } from "@/lib/data";
 export function AuditorDashboard() {
   const router = useRouter();
   const { statusOf, auditExtra, decisions } = useDecisions();
+  const t = useT();
+  const { changes: CHANGES, audit } = useContent();
 
-  const all = [...AUDIT, ...auditExtra];
+  const all = [...audit, ...auditExtra];
   const approved = CHANGES.filter((c) => statusOf(c) === "approved").length;
   const rejected = CHANGES.filter((c) => statusOf(c) === "rejected").length;
   const undecided = CHANGES.length - approved - rejected;
 
   /* قيود الوكيل تُفصل عن قيود البشر: التمييز بينهما أول ما يسأل عنه المدقّق */
-  const agentRows = all.filter((e) => e.who.includes("الوكيل") || e.who.includes("محرك") || e.who.includes("مكوّن"));
+  const agentRows = all.filter(
+    (e) =>
+      e.who.includes("الوكيل") ||
+      e.who.includes("محرك") ||
+      e.who.includes("مكوّن") ||
+      e.who.includes("Agent") ||
+      e.who.includes("engine") ||
+      e.who.includes("component")
+  );
   const humanRows = all.filter((e) => !agentRows.includes(e));
 
   const lowConfidence = CHANGES.filter((c) => c.confidence < 70);
@@ -38,68 +50,63 @@ export function AuditorDashboard() {
       <Hero
         eyebrow={
           <>
-            <Eyebrow tone="live">سجل غير قابل للتعديل أو الحذف</Eyebrow>
-            <Eyebrow>اطّلاع فقط — لا أزرار قرار في أي شاشة</Eyebrow>
+            <Eyebrow tone="live">{t.auditor.immutable}</Eyebrow>
+            <Eyebrow>{t.auditor.readOnlyEverywhere}</Eyebrow>
           </>
         }
         headline={
           <>
-            <HeroFigure>{all.length}</HeroFigure> قيداً
-            <br />
-            في سجل التدقيق
+            <HeroFigure>{all.length}</HeroFigure> {t.auditor.entriesHead}
           </>
         }
         lede={
-          <>
-            كل قيد يحمل من فعل، وماذا فعل، ومتى — ومع قيود الوكيل اسم النموذج وإصداره ونسخة التعليمات المستخدمة. لا
-            يُحذف قيد ولا يُعدَّل؛ وأي تغيير لاحق في قرار يُكتب قيداً جديداً فوقه.
-          </>
+          <>{t.auditor.lede}</>
         }
         actions={
           <Button variant="primary" onClick={() => router.push("/audit")}>
             <History size={20} strokeWidth={2} aria-hidden />
-            افتح السجل الكامل
+            {t.auditor.openFull}
           </Button>
         }
         facts={[
-          { label: "قيود الوكيل", value: agentRows.length },
-          { label: "قيود بشرية", value: humanRows.length },
-          { label: "بنود بلا قرار", value: undecided }
+          { label: t.auditor.agentEntries, value: agentRows.length },
+          { label: t.auditor.humanEntries, value: humanRows.length },
+          { label: t.auditor.undecided, value: undecided }
         ]}
       />
 
       <Reveal>
         <MetricBar>
           <StatCard
-            label="توصيات معتمدة"
+            label={t.auditor.approvedMetric}
             value={approved}
-            context="كل اعتماد أنشأ مهمة باسم مالكها"
+            context={t.auditor.approvedCtx}
             icon={Check}
             tone="success"
           />
           <StatCard
-            label="تغييرات مرفوضة"
+            label={t.auditor.rejectedMetric}
             value={rejected}
-            context={`${decidedWithReason.length} منها بسبب مكتوب في هذه الجلسة`}
+            context={`${decidedWithReason.length} ${t.auditor.withReason}`}
             icon={X}
           />
           <StatCard
-            label="محوّلة للمراجعة اليدوية"
+            label={t.auditor.escalatedMetric}
             value={lowConfidence.length}
-            context="ثقة النموذج دون عتبة 70% — لا تمرّ آلياً"
+            context={t.auditor.escalatedCtx}
             icon={ShieldCheck}
           />
           <StatCard
-            label="قيود الوكيل"
+            label={t.auditor.agentEntries}
             value={agentRows.length}
-            context="جلب، مقارنة، تحليل أثر، فحص استشهاد"
+            context={t.auditor.agentEntriesCtx}
             icon={FileLock2}
           />
         </MetricBar>
       </Reveal>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <Section title="آخر ما سُجِّل" sub="أحدث ستة قيود — بالترتيب الزمني نفسه في السجل الكامل">
+        <Section title={t.auditor.latest} sub={t.auditor.latestSub}>
           <Reveal>
             <Card>
               <ol className="flex flex-col">
@@ -111,9 +118,7 @@ export function AuditorDashboard() {
                       key={`${entry.time}-${i}`}
                       className="grid gap-1 border-b border-hairline py-3 last:border-b-0 md:grid-cols-[150px_1fr] md:gap-4"
                     >
-                      <bdi dir="ltr" className="num font-mono text-body-sm text-ink-muted">
-                        {entry.time}
-                      </bdi>
+                      <Num className="num font-mono text-body-sm text-ink-muted">{entry.time}</Num>
                       <span>
                         <span className="block font-body text-body-sm text-ink">{entry.what}</span>
                         <span className="block font-body text-caption text-ink-muted">{entry.who}</span>
@@ -123,10 +128,10 @@ export function AuditorDashboard() {
               </ol>
               <CardFoot>
                 <span className="flex flex-wrap items-center justify-between gap-3">
-                  السجل يُصدَّر بصيغة قابلة للمراجعة الخارجية.
+                  {t.auditor.exportNote}
                   <Button variant="secondary" size="sm" onClick={() => router.push("/audit")}>
-                    كل القيود
-                    <ChevronLeft size={16} strokeWidth={2} aria-hidden />
+                    {t.auditor.allEntries}
+                    <ChevronLeft size={16} strokeWidth={2} aria-hidden className="ltr:rotate-180" />
                   </Button>
                 </span>
               </CardFoot>
@@ -134,42 +139,47 @@ export function AuditorDashboard() {
           </Reveal>
         </Section>
 
-        <Section title="الأدلة" sub="ما يثبت أن المعروض هو ما نُشر فعلاً">
+        <Section title={t.auditor.evidence} sub={t.auditor.evidenceSub}>
           <Reveal>
             <Card className="flex flex-col gap-4">
+              <EvidenceRow label={t.auditor.rawFile} value={t.auditor.rawFileValue} note={t.auditor.rawFileNote} />
+              <EvidenceRow label={t.auditor.versionHash} value="f3a9c1…" note={t.auditor.versionHashNote} mono />
+              <EvidenceRow label={t.auditor.model} value="Qwen2.5 14B" note={t.auditor.modelNote} mono />
               <EvidenceRow
-                label="الملف الخام"
-                value="محفوظ كما نُشر · 2.4 ميجابايت"
-                note="مع بصمة نصية (hash) تُقارن عند كل فحص"
-              />
-              <EvidenceRow label="بصمة الإصدار" value="f3a9c1…" note="ECC-2:2024 — رُصد 2026-09-17 06:12" mono />
-              <EvidenceRow label="النموذج" value="Qwen2.5 14B" note="تعليمات v3 — يعمل داخل الشبكة" mono />
-              <EvidenceRow
-                label="فحص الاستشهاد"
+                label={t.auditor.citationCheck}
                 value={`${CHANGES.length} / ${CHANGES.length}`}
-                note="تحقّق الكود من وجود كل نص مقتبس حرفياً في الملف الخام"
+                note={t.auditor.citationCheckNote}
                 mono
               />
-              <CardFoot>لا يخرج نص واحد من الشبكة؛ ولا يُعتمد بند إلا بقرار بشري مسجَّل باسمه.</CardFoot>
+              <CardFoot>{t.auditor.evidenceFoot}</CardFoot>
             </Card>
           </Reveal>
         </Section>
       </div>
 
-      <Section title="حالة البتّ في التغييرات" sub="ما بُتَّ فيه وما لم يُبتّ — بلا إمكانية تعديل من هذه الشاشة">
+      <Section title={t.auditor.decisionState} sub={t.auditor.decisionStateSub}>
         <Reveal>
           <Card>
             <CardHead
-              title="توزيع القرارات"
-              sub="النسبة من إجمالي التغييرات الجوهرية المرصودة"
-              aside={<span className="num font-mono text-caption text-ink-subtle">{CHANGES.length} تغييراً</span>}
+              title={t.auditor.distribution}
+              sub={t.auditor.distributionSub}
+              aside={
+                <span className="num font-mono text-caption text-ink-subtle">
+                  <Num>{CHANGES.length}</Num> {t.common.changes}
+                </span>
+              }
             />
             <div className="flex flex-col gap-4">
-              <DecisionBar label="معتمدة" count={approved} total={CHANGES.length} tone="var(--success)" />
-              <DecisionBar label="مرفوضة" count={rejected} total={CHANGES.length} tone="var(--danger)" />
-              <DecisionBar label="بلا قرار بعد" count={undecided} total={CHANGES.length} tone="var(--ink-subtle)" />
+              <DecisionBar label={t.auditor.approvedBar} count={approved} total={CHANGES.length} tone="var(--success)" />
+              <DecisionBar label={t.auditor.rejectedBar} count={rejected} total={CHANGES.length} tone="var(--danger)" />
+              <DecisionBar
+                label={t.auditor.undecidedBar}
+                count={undecided}
+                total={CHANGES.length}
+                tone="var(--ink-subtle)"
+              />
             </div>
-            <CardFoot>كل انتقال بين هذه الحالات له قيد في السجل باسم من قام به ووقته.</CardFoot>
+            <CardFoot>{t.auditor.distributionFoot}</CardFoot>
           </Card>
         </Reveal>
       </Section>
@@ -193,9 +203,7 @@ function EvidenceRow({
       <div className="flex items-baseline justify-between gap-4">
         <span className="font-body text-body-sm text-ink-muted">{label}</span>
         {mono ? (
-          <bdi dir="ltr" className="num font-mono text-body-sm font-semibold text-ink">
-            {value}
-          </bdi>
+          <Num className="num font-mono text-body-sm font-semibold text-ink">{value}</Num>
         ) : (
           <span className="font-body text-body-sm font-semibold text-ink">{value}</span>
         )}
@@ -213,10 +221,10 @@ function DecisionBar({ label, count, total, tone }: { label: string; count: numb
       <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-sunken">
         <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: tone }} />
       </span>
-      {/* النسبة والعدد داخل bdi واحد باتجاه LTR، وإلا قُرئت «٪70» معكوسة بين النصّين */}
-      <bdi dir="ltr" className="num w-[86px] shrink-0 text-end font-mono text-body-sm text-ink">
+      {/* النسبة والعدد داخل عزلة واحدة باتجاه LTR، وإلا قُرئت «٪70» معكوسة بين النصّين */}
+      <Num className="num w-[86px] shrink-0 text-end font-mono text-body-sm text-ink">
         {count} · {pct}%
-      </bdi>
+      </Num>
     </div>
   );
 }

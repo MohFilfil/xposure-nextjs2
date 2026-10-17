@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlarmClock, CircleCheck, ExternalLink, SlidersHorizontal, TriangleAlert } from "lucide-react";
+import { AlarmClock, CircleCheck, ExternalLink, GitCompare, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { Eyebrow, Page, PageHead } from "@/components/layout/Page";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -16,7 +16,9 @@ import { Reveal } from "@/components/motion/Reveal";
 import { useToast } from "@/components/ui/Toast";
 import { useDecisions } from "@/components/DecisionsProvider";
 import { useSession } from "@/components/SessionProvider";
-import { TASKS } from "@/lib/data";
+import { useT } from "@/components/I18nProvider";
+import { Num, Code } from "@/components/ui/Bidi";
+import { ownerMatches, useContent } from "@/lib/content";
 import type { Task } from "@/lib/types";
 import { daysUntil, dueState } from "@/lib/utils";
 import { PRIORITY_RANK } from "@/lib/vocab";
@@ -28,28 +30,32 @@ export default function TasksPage() {
   const toast = useToast();
   const { extraTasks } = useDecisions();
   const { role, account } = useSession();
+  const t = useT();
+  const { tasks: allTasks, localizeTask } = useContent();
   /**
    * مالك العملية يرى مهامه وحده: طابور المنشأة كاملاً ليس عمله، وعرضه عليه
    * يدفن ما يخصّه بين ما يخصّ غيره.
    */
   const scoped = role === "owner" && account;
-  const all = scoped ? [...TASKS, ...extraTasks].filter((t) => t.owner === account.name) : [...TASKS, ...extraTasks];
+  const everything = [...allTasks, ...extraTasks.map(localizeTask)];
+  const all = scoped ? everything.filter((task) => ownerMatches(task.owner, account.name)) : everything;
 
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [priority, setPriority] = useState("all");
   const { density, setDensity } = useDensity();
 
-  const rows = all.filter((t) => {
-    if (status !== "all" && t.status !== status) return false;
-    if (priority !== "all" && t.priority !== priority) return false;
-    if (query && !`${t.title} ${t.id} ${t.change} ${t.owner}`.toLowerCase().includes(query.toLowerCase())) return false;
+  const rows = all.filter((task) => {
+    if (status !== "all" && task.status !== status) return false;
+    if (priority !== "all" && task.priority !== priority) return false;
+    if (query && !`${task.title} ${task.id} ${task.change} ${task.owner}`.toLowerCase().includes(query.toLowerCase()))
+      return false;
     return true;
   });
 
-  const open = all.filter((t) => t.status !== "approved");
-  const overdue = open.filter((t) => daysUntil(t.due) < 0).length;
-  const soon = open.filter((t) => daysUntil(t.due) >= 0 && daysUntil(t.due) <= 45).length;
+  const open = all.filter((task) => task.status !== "approved");
+  const overdue = open.filter((task) => daysUntil(task.due) < 0).length;
+  const soon = open.filter((task) => daysUntil(task.due) >= 0 && daysUntil(task.due) <= 45).length;
   const done = all.length - open.length;
 
   const isFiltered = query !== "" || status !== "all" || priority !== "all";
@@ -62,58 +68,70 @@ export default function TasksPage() {
   const columns: Column<Task>[] = [
     {
       key: "title",
-      header: "المهمة",
-      render: (t) => (
+      header: t.tasks.colTask,
+      render: (task) => (
         <>
-          <div className="font-medium text-ink">{t.title}</div>
+          <div className="font-medium text-ink">{task.title}</div>
           <div className="font-mono text-caption text-ink-muted">
-            {t.id} · {t.change}
+            <Code>{task.id}</Code> · <Code>{task.change}</Code>
           </div>
         </>
       )
     },
-    { key: "owner", header: "المُسند إليه", hideBelow: "sm", render: (t) => t.owner },
+    { key: "owner", header: t.tasks.colOwner, hideBelow: "sm", render: (task) => task.owner },
     {
       key: "due",
-      header: "تاريخ الاستحقاق",
+      header: t.tasks.colDue,
       // اللون مقروناً بنص دائماً — لا يُعتمد على اللون وحده
-      render: (t) => {
-        const { tone, label } = dueState(t.due);
+      render: (task) => {
+        const { tone, days } = dueState(task.due);
         return (
           <>
-            <span className="font-mono">{t.due}</span>
-            <div className={`text-caption ${TONE[tone]}`}>{label}</div>
+            <Num className="num font-mono">{task.due}</Num>
+            <div className={`text-caption ${TONE[tone]}`}>
+              {days < 0 ? (
+                <>
+                  {t.tasks.overdueBy} <Num>{Math.abs(days)}</Num> {t.common.days}
+                </>
+              ) : (
+                <>
+                  {t.tasks.within} <Num>{days}</Num> {t.common.days}
+                </>
+              )}
+            </div>
           </>
         );
       },
-      sortValue: (t) => t.due
+      sortValue: (task) => task.due
     },
     {
       key: "priority",
-      header: "الأولوية",
+      header: t.changes.priority,
       hideBelow: "xs",
-      render: (t) => <PriorityBadge priority={t.priority} />,
-      sortValue: (t) => PRIORITY_RANK[t.priority]
+      render: (task) => <PriorityBadge priority={task.priority} />,
+      sortValue: (task) => PRIORITY_RANK[task.priority]
     },
-    { key: "status", header: "الحالة", render: (t) => <StatusBadge status={t.status} /> }
+    { key: "status", header: t.changes.status, render: (task) => <StatusBadge status={task.status} /> }
   ];
 
   return (
     <Page>
       <PageHead
-        title="المهام"
+        title={t.tasks.title}
         eyebrow={
           <>
-            <Eyebrow>{open.length} مهمة مفتوحة من {all.length}</Eyebrow>
-            {scoped && <Eyebrow>مهامي وحدها — {account.name}</Eyebrow>}
-            <Eyebrow>مزامنة Odoo — عرض توضيحي</Eyebrow>
+            <Eyebrow>
+              <Num>{open.length}</Num> {t.tasks.openOf} <Num>{all.length}</Num>
+            </Eyebrow>
+            {scoped && <Eyebrow>{t.tasks.mineOnly}</Eyebrow>}
+            <Eyebrow>{t.tasks.odooSync}</Eyebrow>
           </>
         }
-        lede="كل مهمة هنا نشأت بعد اعتماد صريح من المختص، ومرتبطة بالتغيير الذي تسبب بها. الوكيل لا يُغلق مهمة ولا يعتبر متطلباً مستوفى."
+        lede={t.tasks.lede}
         action={
-          <Button variant="secondary" onClick={() => toast("info", "يفتح نظام المهام في تبويب منفصل — نموذج عرض، بلا ربط فعلي.")}>
+          <Button variant="secondary" onClick={() => toast("info", t.tasks.odooToast)}>
             <ExternalLink size={20} strokeWidth={2} aria-hidden />
-            فتح في Odoo
+            {t.tasks.openInOdoo}
           </Button>
         }
       />
@@ -122,25 +140,31 @@ export default function TasksPage() {
       <Reveal>
         <MetricBar>
           <StatCard
-            label="متأخرة"
+            label={t.tasks.overdue}
             value={overdue}
-            context="تجاوزت موعدها المقترح ولم تُغلق بعد"
+            context={t.tasks.overdueCtx}
             icon={TriangleAlert}
             tone={overdue > 0 ? "danger" : undefined}
             alert={overdue > 0}
           />
+          <StatCard label={t.tasks.dueSoon} value={soon} context={t.tasks.dueSoonCtx} icon={AlarmClock} />
           <StatCard
-            label="تستحق خلال 45 يوماً"
-            value={soon}
-            context="تحتاج جدولة ضمن هذا الشهر"
-            icon={AlarmClock}
-          />
-          <StatCard
-            label="منجزة"
+            label={t.tasks.done}
             value={done}
-            context="أُغلقت باعتماد المختص، لا بقرار الوكيل"
+            context={t.tasks.doneCtx}
             icon={CircleCheck}
             tone="success"
+          />
+          {/**
+           * الخانة الرابعة كانت فارغة: شريط المؤشرات شبكة من أربعة أعمدة، وثلاث
+           * خانات تترك ربعه بياضاً مؤطّراً. والرقم الذي يملأها ليس حشواً — عدد
+           * البنود التنظيمية التي نشأت عنها هذه المهام هو ما يربط المهمة بسببها.
+           */}
+          <StatCard
+            label={t.owner.linkedChanges}
+            value={new Set(all.map((task) => task.change)).size}
+            context={t.owner.linkedChangesCtx}
+            icon={GitCompare}
           />
         </MetricBar>
       </Reveal>
@@ -148,38 +172,38 @@ export default function TasksPage() {
       <Reveal className="rounded-lg border border-border bg-surface-raised p-5 shadow-card print:hidden">
         <div className="mb-4 flex items-center gap-2 font-body text-body-sm font-bold text-ink">
           <SlidersHorizontal size={18} strokeWidth={2} className="text-ink-muted" aria-hidden />
-          تصفية المهام
+          {t.tasks.filterTasks}
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           <Input
-            label="بحث في المهام"
+            label={t.tasks.searchLabel}
             type="search"
-            placeholder="عنوان المهمة، أو المُسند إليه"
+            placeholder={t.tasks.searchPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           <Select
-            label="الحالة"
+            label={t.changes.status}
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             options={[
-              { value: "all", label: "كل الحالات" },
-              { value: "new", label: "جديد" },
-              { value: "pending", label: "معلق" },
-              { value: "approved", label: "معتمد" },
-              { value: "rejected", label: "مرفوض" }
+              { value: "all", label: t.changes.allStatuses },
+              { value: "new", label: t.status.new },
+              { value: "pending", label: t.status.pending },
+              { value: "approved", label: t.status.approved },
+              { value: "rejected", label: t.status.rejected }
             ]}
           />
           <Select
-            label="الأولوية"
+            label={t.changes.priority}
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
             options={[
-              { value: "all", label: "كل الأولويات" },
-              { value: "critical", label: "حرج" },
-              { value: "strategic", label: "استراتيجي" },
-              { value: "quick", label: "إجراء سريع" },
-              { value: "watch", label: "متابعة" }
+              { value: "all", label: t.changes.allPriorities },
+              { value: "critical", label: t.priority.critical },
+              { value: "strategic", label: t.priority.strategic },
+              { value: "quick", label: t.priority.quick },
+              { value: "watch", label: t.priority.watch }
             ]}
           />
         </div>
@@ -192,7 +216,7 @@ export default function TasksPage() {
               onClick={reset}
               className="font-body text-body-sm font-semibold text-brand transition-colors duration-1 hover:text-brand-hover"
             >
-              مسح الفلاتر
+              {t.tasks.clearFilters}
             </button>
           </div>
         )}
@@ -200,27 +224,33 @@ export default function TasksPage() {
 
       <div className="-mb-4 flex flex-wrap items-center justify-between gap-3">
         <span aria-live="polite" className="font-body text-body-sm text-ink-muted">
-          <span className="font-bold text-ink">{rows.length}</span> مهمة{" "}
-          {isFiltered ? `مطابقة من أصل ${all.length}` : "في القائمة"}
+          <Num className="font-bold text-ink">{rows.length}</Num> {t.common.tasks}{" "}
+          {isFiltered ? (
+            <>
+              {t.tasks.matching} <Num>{all.length}</Num>
+            </>
+          ) : (
+            t.tasks.inList
+          )}
         </span>
         <DensityToggle value={density} onChange={setDensity} />
       </div>
 
       {rows.length > 0 ? (
         <DataTable
-          caption="قائمة المهام"
+          caption={t.tasks.listCaption}
           columns={columns}
           rows={rows}
           density={density}
-          onRowClick={(t) => router.push(`/changes/${t.change}`)}
+          onRowClick={(task) => router.push(`/changes/${task.change}`)}
         />
       ) : (
         <EmptyState
-          title="لا نتائج مطابقة"
-          description="لا توجد مهمة تطابق شروط التصفية الحالية. وسّع نطاق البحث أو أعد ضبط الفلاتر."
+          title={t.common.noResults}
+          description={t.common.noResultsHint}
           action={
             <Button variant="secondary" onClick={reset}>
-              إعادة ضبط الفلاتر
+              {t.common.resetFilters}
             </Button>
           }
         />

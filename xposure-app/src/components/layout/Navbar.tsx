@@ -6,10 +6,11 @@ import { Bell, Check, LogOut, Menu, Moon, Search, Settings2, Sun, UserCog } from
 import { Logo } from "@/components/ui/Logo";
 import { useTheme } from "@/components/ThemeProvider";
 import { useSession } from "@/components/SessionProvider";
+import { useT } from "@/components/I18nProvider";
+import { useContent, useRoleCopy } from "@/lib/content";
 import { useToast } from "@/components/ui/Toast";
 import { useCommandPalette } from "@/components/ui/CommandPalette";
-import { COMPANY } from "@/lib/data";
-import { ROLES, ROLE_ORDER, homeFor, initialOf, type Role } from "@/lib/roles";
+import { ROLE_ORDER, homeFor, type Role } from "@/lib/roles";
 import { cx } from "@/lib/utils";
 
 /**
@@ -27,7 +28,10 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
   const toast = useToast();
   const router = useRouter();
   const openPalette = useCommandPalette();
-  const { role, account, switchRole, signOut } = useSession();
+  const { role, switchRole, signOut } = useSession();
+  const t = useT();
+  const roleCopy = useRoleCopy();
+  const { company } = useContent();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +57,7 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
         <button
           type="button"
           onClick={onMenu}
-          aria-label="فتح القائمة"
+          aria-label={t.common.openMenu}
           className="flex rounded-md p-1 text-ink-muted transition-colors duration-1 hover:bg-surface-overlay hover:text-ink md:hidden"
         >
           <Menu size={24} strokeWidth={2} aria-hidden />
@@ -61,8 +65,8 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
         {/* الشعار على الشاشات الضيّقة وحدها: الشريط الجانبي مطويّ هناك فيغيب معه */}
         <Logo className="h-7 w-16 shrink-0 md:hidden" />
         <span className="hidden min-w-0 flex-col md:flex">
-          <span className="truncate font-body text-body-sm font-semibold text-ink">{COMPANY.split(" (")[0]}</span>
-          {role && <span className="truncate font-body text-caption text-ink-muted">{ROLES[role].label}</span>}
+          <span className="truncate font-body text-body-sm font-semibold text-ink">{company.split(" (")[0]}</span>
+          {role && <span className="truncate font-body text-caption text-ink-muted">{roleCopy.label(role)}</span>}
         </span>
       </div>
 
@@ -71,11 +75,11 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
         <button
           type="button"
           onClick={openPalette}
-          aria-label="بحث شامل وأوامر سريعة"
+          aria-label={t.common.searchAndCommands}
           className="group flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-ink-muted transition-colors duration-2 hover:border-brand hover:text-ink max-md:border-0 max-md:bg-transparent max-md:px-1"
         >
           <Search size={20} strokeWidth={2} aria-hidden />
-          <span className="hidden font-body text-body-sm md:inline">بحث…</span>
+          <span className="hidden font-body text-body-sm md:inline">{t.common.search}</span>
           <kbd className="hidden rounded-sm border border-border px-1.5 font-mono text-caption text-ink-subtle transition-colors duration-2 group-hover:border-brand group-hover:text-brand lg:inline">
             Ctrl K
           </kbd>
@@ -83,8 +87,8 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
 
         <button
           type="button"
-          aria-label="الإشعارات"
-          onClick={() => toast("info", "لديك 4 قضايا حرجة بانتظار قرارك.")}
+          aria-label={t.common.notifications}
+          onClick={() => toast("info", t.toast.notifications)}
           className="group relative flex rounded-md p-1 text-ink-muted transition-colors duration-1 hover:bg-surface-overlay hover:text-ink"
         >
           <span className="absolute end-0 top-0 z-10 h-2 w-2 rounded-full border-2 border-surface-raised bg-danger" aria-hidden />
@@ -103,7 +107,7 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
         <button
           type="button"
           onClick={toggle}
-          aria-label={theme === "dark" ? "التحويل إلى السمة الفاتحة" : "التحويل إلى السمة الداكنة"}
+          aria-label={theme === "dark" ? t.common.toLight : t.common.toDark}
           className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-md text-ink-muted transition-colors duration-1 hover:bg-surface-overlay hover:text-ink"
         >
           {/* الشمس والقمر متراكبان: التبديل دوران وتلاشٍ، لا استبدال مفاجئ للأيقونة */}
@@ -133,7 +137,7 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
             onClick={() => setMenuOpen((v) => !v)}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            aria-label="قائمة المستخدم وتبديل الدور"
+            aria-label={t.common.userMenu}
             className="flex items-center gap-2 rounded-md p-1 transition-colors duration-1 hover:bg-surface-overlay"
           >
             {/* الصورة الرمزية: دائرية بخلفية brand وحرف واحد — لا أيقونة شخص عامة */}
@@ -141,20 +145,20 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
               className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-brand font-body text-body-sm font-bold text-on-brand shadow-glow"
               aria-hidden
             >
-              {role ? initialOf(role) : "؟"}
+              {role ? roleCopy.name(role).trim()[0] : "?"}
             </span>
-            <span className="hidden font-body text-body-sm text-ink-muted md:inline">{account?.name}</span>
+            <span className="hidden font-body text-body-sm text-ink-muted md:inline">{role ? roleCopy.name(role) : ""}</span>
           </button>
 
           {menuOpen && (
             <div
               role="menu"
-              aria-label="قائمة المستخدم"
+              aria-label={t.common.userMenu}
               className="glass absolute end-0 top-[calc(100%+8px)] z-dropdown flex w-[288px] animate-scale-in flex-col gap-1 rounded-lg border p-2 shadow-lg"
             >
               <div className="border-b border-hairline px-3 pb-2 pt-1">
-                <span className="block font-body text-body-sm font-bold text-ink">{account?.name}</span>
-                <span className="block font-body text-caption text-ink-muted">{account?.title}</span>
+                <span className="block font-body text-body-sm font-bold text-ink">{role ? roleCopy.name(role) : ""}</span>
+                <span className="block font-body text-caption text-ink-muted">{role ? roleCopy.title(role) : ""}</span>
               </div>
 
               {/**
@@ -164,7 +168,7 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
                */}
               <p className="flex items-center gap-2 px-3 pb-1 pt-2 font-body text-caption text-ink-subtle">
                 <UserCog size={14} strokeWidth={2} aria-hidden />
-                تبديل الدور (عرض توضيحي)
+                {t.login.switchRole}
               </p>
               {ROLE_ORDER.map((r) => {
                 const current = r === role;
@@ -187,8 +191,8 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
                     )}
                   >
                     <span className="flex min-w-0 flex-col">
-                      <span className="truncate">{ROLES[r].label}</span>
-                      <span className="truncate font-body text-caption text-ink-subtle">{ROLES[r].account.name}</span>
+                      <span className="truncate">{roleCopy.label(r)}</span>
+                      <span className="truncate font-body text-caption text-ink-subtle">{roleCopy.name(r)}</span>
                     </span>
                     {current && <Check size={16} strokeWidth={2.5} className="shrink-0 text-brand" aria-hidden />}
                   </button>
@@ -206,7 +210,7 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
                   className="flex items-center gap-3 rounded-md p-2 text-start font-body text-body-sm text-ink transition-colors duration-1 hover:bg-surface-overlay"
                 >
                   <Settings2 size={20} strokeWidth={2} aria-hidden />
-                  الإعدادات
+                  {t.nav.settings}
                 </button>
                 <button
                   type="button"
@@ -219,7 +223,7 @@ export function Navbar({ onMenu }: { onMenu: () => void }) {
                   className="flex items-center gap-3 rounded-md p-2 text-start font-body text-body-sm text-ink transition-colors duration-1 hover:bg-surface-overlay"
                 >
                   <LogOut size={20} strokeWidth={2} aria-hidden />
-                  تسجيل الخروج
+                  {t.login.signOut}
                 </button>
               </div>
             </div>

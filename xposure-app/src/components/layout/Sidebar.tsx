@@ -17,16 +17,18 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useSession } from "@/components/SessionProvider";
+import { useT } from "@/components/I18nProvider";
 import { navFor } from "@/lib/roles";
 import { cx } from "@/lib/utils";
 
 export interface NavItem {
   href: string;
-  label: string;
+  /** مفتاح التسمية في المعجم — لا نص مكتوب، لأن الشريط يُقرأ بلغتين. */
+  key: "dashboard" | "changes" | "tasks" | "sources" | "audit" | "integrations" | "deployment" | "help" | "settings";
   icon: LucideIcon;
-  group: string;
+  group: "groupWork" | "groupSystem";
   /** ما الذي يعدّه الرقم بجانب الرابط — يُقرأ في tooltip وفي قارئ الشاشة. */
-  countLabel?: string;
+  countKey?: "awaitingReview" | "openTasks" | "pendingApproval";
 }
 
 /**
@@ -34,33 +36,14 @@ export interface NavItem {
  * فلا تُبنى قائمة ثانية لكل دور، ولا يظهر لدور رابطٌ لا يملكه.
  */
 export const NAV_ITEMS: Record<string, NavItem> = {
-  "/dashboard": { href: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard, group: "المراجعة" },
-  "/changes": {
-    href: "/changes",
-    label: "التغييرات",
-    icon: GitCompare,
-    group: "المراجعة",
-    countLabel: "بانتظار المراجعة"
-  },
-  "/tasks": {
-    href: "/tasks",
-    label: "المهام",
-    icon: ListChecks,
-    group: "المراجعة",
-    countLabel: "مهام مفتوحة"
-  },
-  "/sources": {
-    href: "/sources",
-    label: "المصادر التنظيمية",
-    icon: Radar,
-    group: "النظام",
-    countLabel: "بانتظار موافقة المختص"
-  },
-  "/audit": { href: "/audit", label: "سجل التدقيق", icon: History, group: "النظام" },
-  "/settings": { href: "/settings", label: "الإعدادات", icon: Settings2, group: "النظام" }
+  "/dashboard": { href: "/dashboard", key: "dashboard", icon: LayoutDashboard, group: "groupWork" },
+  "/changes": { href: "/changes", key: "changes", icon: GitCompare, group: "groupWork", countKey: "awaitingReview" },
+  "/tasks": { href: "/tasks", key: "tasks", icon: ListChecks, group: "groupWork", countKey: "openTasks" },
+  "/sources": { href: "/sources", key: "sources", icon: Radar, group: "groupSystem", countKey: "pendingApproval" },
+  "/audit": { href: "/audit", key: "audit", icon: History, group: "groupSystem" },
+  "/settings": { href: "/settings", key: "settings", icon: Settings2, group: "groupSystem" }
 };
 
-/** الترتيب الكامل — يُستخدم حين لا جلسة بعد ولأغراض الاختبار. */
 export const NAV: NavItem[] = Object.values(NAV_ITEMS);
 
 /**
@@ -89,12 +72,13 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const { role } = useSession();
+  const t = useT();
   const items = (role ? navFor(role) : Object.keys(NAV_ITEMS)).map((href) => NAV_ITEMS[href]).filter(Boolean);
   let lastGroup = "";
 
   return (
     <nav
-      aria-label="التنقل الرئيسي"
+      aria-label={t.common.mainNav}
       className={cx(
         "flex shrink-0 flex-col border-e border-hairline bg-surface-raised print:hidden",
         "sticky top-0 z-sticky h-screen transition-[width] duration-3 ease-inout",
@@ -124,8 +108,10 @@ export function Sidebar({
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
           const count = counts[item.href];
-          const header = item.group !== lastGroup ? item.group : null;
+          const header = item.group !== lastGroup ? t.nav[item.group] : null;
           lastGroup = item.group;
+          const label = t.nav[item.key];
+          const countLabel = item.countKey ? t.nav[item.countKey] : undefined;
 
           return (
             <div key={item.href}>
@@ -141,8 +127,8 @@ export function Sidebar({
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                aria-label={collapsed ? item.label : undefined}
-                title={collapsed ? item.label : undefined}
+                aria-label={collapsed ? label : undefined}
+                title={collapsed ? label : undefined}
                 className={cx(
                   "group relative flex w-full items-center gap-3 overflow-hidden rounded-md px-3 py-2.5 font-body text-body no-underline",
                   "transition-colors duration-2 ease-out",
@@ -174,7 +160,7 @@ export function Sidebar({
                     collapsed && "pointer-events-none absolute opacity-0"
                   )}
                 >
-                  {item.label}
+                  {label}
                 </span>
 
                 {/**
@@ -184,7 +170,7 @@ export function Sidebar({
                  */}
                 {typeof count === "number" && count > 0 && !collapsed && (
                   <span
-                    title={item.countLabel}
+                    title={countLabel}
                     className={cx(
                       "num shrink-0 rounded-full px-2 py-0.5 font-mono text-caption font-semibold",
                       active
@@ -193,7 +179,7 @@ export function Sidebar({
                     )}
                   >
                     {count}
-                    <span className="sr-only"> {item.countLabel}</span>
+                    <span className="sr-only"> {countLabel}</span>
                   </span>
                 )}
                 {typeof count === "number" && count > 0 && collapsed && (
@@ -207,7 +193,7 @@ export function Sidebar({
 
       <div className={cx("border-t border-hairline", collapsed ? "p-2" : "p-3")}>
         {collapsed ? (
-          <div className="flex flex-col items-center gap-3 pb-2" title="نواة معزولة — النماذج تعمل محلياً">
+          <div className="flex flex-col items-center gap-3 pb-2" title={t.nav.isolatedCore}>
             <LiveDot />
             <Lock size={18} strokeWidth={2} className="text-ink-subtle" aria-hidden />
           </div>
@@ -215,15 +201,15 @@ export function Sidebar({
           <div className="well p-3">
             <p className="flex items-center gap-2 font-body text-body-sm font-semibold text-ink">
               <LiveDot />
-              الوكيل متصل
+              {t.nav.agentOnline}
             </p>
             <p className="mt-2.5 flex items-start gap-2 font-body text-caption text-ink-muted">
               <Lock size={14} strokeWidth={2} aria-hidden className="mt-0.5 shrink-0" />
-              نواة معزولة — لا تخرج بيانات المنشأة
+              {t.nav.isolatedCore}
             </p>
             <p className="mt-1.5 flex items-start gap-2 font-body text-caption text-ink-muted">
               <Box size={14} strokeWidth={2} aria-hidden className="mt-0.5 shrink-0" />
-              النماذج محلياً · Qwen2.5 14B
+              {t.nav.localModels}
             </p>
           </div>
         )}
@@ -231,7 +217,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onToggleCollapse}
-          aria-label={collapsed ? "توسيع شريط التنقل" : "طيّ شريط التنقل"}
+          aria-label={collapsed ? t.nav.expand : t.nav.collapseSidebar}
           className={cx(
             "mt-2 hidden w-full items-center gap-3 rounded-md px-3 py-2 font-body text-caption text-ink-subtle transition-colors duration-2 hover:bg-surface-overlay hover:text-ink md:flex",
             collapsed && "justify-center px-0"
@@ -242,7 +228,7 @@ export function Sidebar({
           ) : (
             <PanelRightClose size={18} strokeWidth={2} aria-hidden />
           )}
-          {!collapsed && <span>طيّ الشريط</span>}
+          {!collapsed && <span>{t.nav.collapse}</span>}
         </button>
       </div>
     </nav>

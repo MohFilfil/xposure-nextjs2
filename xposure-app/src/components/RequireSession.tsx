@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { MotifSpinner } from "@/components/ui/BrandMotif";
 import { useSession } from "@/components/SessionProvider";
+import { useT } from "@/components/I18nProvider";
 import { allowsPath, homeFor } from "@/lib/roles";
 
 /**
@@ -37,10 +38,11 @@ export function RequireSession({ children }: { children: React.ReactNode }) {
 
 /** لوح الانتظار: نفس نمط العدسة المستخدم في التحميل داخل التطبيق — لا شاشة بيضاء. */
 function SessionSplash() {
+  const t = useT();
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-5" role="status" aria-live="polite">
       <MotifSpinner className="h-14 w-14" />
-      <p className="font-body text-body-sm text-ink-muted">جارٍ التحقق من الجلسة…</p>
+      <p className="font-body text-body-sm text-ink-muted">{t.common.checkingSession}</p>
     </div>
   );
 }

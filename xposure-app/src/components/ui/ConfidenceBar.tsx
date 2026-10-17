@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { CountUp } from "@/components/motion/CountUp";
+import { useT } from "@/components/I18nProvider";
+import { Num } from "@/components/ui/Bidi";
 
 /**
  * حصراً لدرجة ثقة النموذج — لا يُستخدم لأي نسبة أخرى في النظام.
@@ -11,11 +13,12 @@ import { CountUp } from "@/components/motion/CountUp";
  * قبل قراءة الرقم نفسه.
  */
 export function ConfidenceBar({ value }: { value: number }) {
+  const t = useT();
   const [filled, setFilled] = useState(false);
   const band = value >= 95 ? "high" : value >= 70 ? "mid" : "low";
   const color = band === "high" ? "var(--success)" : band === "mid" ? "var(--warning)" : "var(--danger)";
   const note =
-    band === "high" ? "يمكن اعتماد التوصية مباشرة." : band === "mid" ? "يُنصح بمراجعة أدق قبل الاعتماد." : null;
+    band === "high" ? t.widgets.confidenceHigh : band === "mid" ? t.widgets.confidenceMid : null;
 
   useEffect(() => {
     const t = requestAnimationFrame(() => setFilled(true));
@@ -25,7 +28,7 @@ export function ConfidenceBar({ value }: { value: number }) {
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-2">
-        <span className="font-body text-body-sm text-ink-muted">درجة ثقة النموذج</span>
+        <span className="font-body text-body-sm text-ink-muted">{t.widgets.confidence}</span>
         <span className="font-display text-h2" style={{ color }}>
           <CountUp value={value} suffix="%" />
         </span>
@@ -50,11 +53,11 @@ export function ConfidenceBar({ value }: { value: number }) {
           className="relative block w-fit translate-x-1/2 font-body text-caption text-ink-muted"
           style={{ insetInlineStart: "30%" }}
         >
-          عتبة 70%
+          {t.widgets.threshold} <Num>70%</Num>
         </span>
       </div>
 
-      {band === "low" && <div className="font-body text-body-sm font-bold text-danger">حُوّل للمراجعة اليدوية</div>}
+      {band === "low" && <div className="font-body text-body-sm font-bold text-danger">{t.widgets.escalated}</div>}
       {note && <div className="mt-2 font-body text-body-sm text-ink-muted">{note}</div>}
     </div>
   );

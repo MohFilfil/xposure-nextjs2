@@ -3,14 +3,16 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Priority, RegChange } from "@/lib/types";
+import { useT } from "@/components/I18nProvider";
+import { Num } from "@/components/ui/Bidi";
 import { daysUntil, cx, TODAY } from "@/lib/utils";
-import { PRIORITY_LABEL, PRIORITY_RANK, PRIORITY_VAR } from "@/lib/vocab";
+import { PRIORITY_RANK, PRIORITY_VAR } from "@/lib/vocab";
 
-const MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
-/** تسمية «شهر سنة» من تاريخ ISO — الأرقام غربية كبقية النظام. */
-function monthLabel(d: Date) {
-  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+
+/** تسمية «شهر سنة» — أسماء الشهور من المعجم، والأرقام غربية كبقية النظام. */
+function monthLabel(d: Date, months: readonly string[]) {
+  return `${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function startOfMonth(d: Date) {
@@ -28,6 +30,7 @@ function startOfMonth(d: Date) {
  * كل عنقود قابل للنقر ويفتح قائمة التغييرات مصفّاة على أولويته الغالبة.
  */
 export function DeadlineTimeline({ changes }: { changes: RegChange[] }) {
+  const t = useT();
   const router = useRouter();
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -66,7 +69,7 @@ export function DeadlineTimeline({ changes }: { changes: RegChange[] }) {
     const cursor = new Date(start);
     let n = 0;
     while (cursor < end) {
-      ticks.push({ label: monthLabel(cursor), at: pos(cursor.toISOString().slice(0, 10)), named: false });
+      ticks.push({ label: monthLabel(cursor, t.widgets.months), at: pos(cursor.toISOString().slice(0, 10)), named: false });
       cursor.setMonth(cursor.getMonth() + 1);
       n += 1;
     }
@@ -76,8 +79,8 @@ export function DeadlineTimeline({ changes }: { changes: RegChange[] }) {
     });
     const months = ticks;
 
-    return { clusters, months, span: `${monthLabel(start)} — ${monthLabel(last)}` };
-  }, [changes]);
+    return { clusters, months, span: `${monthLabel(start, t.widgets.months)} — ${monthLabel(last, t.widgets.months)}` };
+  }, [changes, t]);
 
   if (clusters.length === 0) return null;
 
@@ -85,7 +88,7 @@ export function DeadlineTimeline({ changes }: { changes: RegChange[] }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="font-body text-body-sm text-ink-muted">{span}</span>
-        <span className="font-body text-caption text-ink-subtle">حجم الدائرة = عدد التغييرات المستحقة في اليوم نفسه</span>
+        <span className="font-body text-caption text-ink-subtle">{t.widgets.clusterLegend}</span>
       </div>
 
       {/**
@@ -117,7 +120,7 @@ export function DeadlineTimeline({ changes }: { changes: RegChange[] }) {
           style={{ left: "0%", transform: "scaleX(-1) translateX(-6px)" }}
           aria-hidden
         >
-          اليوم
+          {t.common.today}
         </span>
 
         {clusters.map((c) => {
@@ -132,7 +135,7 @@ export function DeadlineTimeline({ changes }: { changes: RegChange[] }) {
               onFocus={() => setHovered(c.iso)}
               onBlur={() => setHovered(null)}
               onClick={() => router.push(`/changes?wave=${c.iso}`)}
-              aria-label={`${c.iso}: ${c.items.length} تغييراً، أعلاها ${PRIORITY_LABEL[c.top]}، خلال ${c.days} يوماً`}
+              aria-label={`${c.iso}: ${c.items.length} · ${t.priority[c.top]} · ${c.days}`}
               className="absolute top-[40px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface-raised transition-transform duration-2 ease-spring hover:scale-110 focus-visible:scale-110"
               style={{ left: `${c.at}%`, width: size, height: size, background: PRIORITY_VAR[c.top] }}
             >
@@ -154,10 +157,10 @@ export function DeadlineTimeline({ changes }: { changes: RegChange[] }) {
                     {c.iso}
                   </span>
                   <span className="mt-1 block font-body text-body-sm font-bold text-ink">
-                    {c.items.length} تغييراً تستحق في اليوم نفسه
+                    <Num>{c.items.length}</Num> {t.common.changes} {t.widgets.dueSameDay}
                   </span>
                   <span className="mt-1 block font-body text-caption text-ink-muted">
-                    خلال {c.days} يوماً · أعلاها {PRIORITY_LABEL[c.top]}
+                    <Num>{c.days}</Num> {t.common.days} · {t.widgets.topPriority} {t.priority[c.top]}
                   </span>
                 </span>
               )}
@@ -172,6 +175,7 @@ export function DeadlineTimeline({ changes }: { changes: RegChange[] }) {
 }
 
 function Legend({ changes }: { changes: RegChange[] }) {
+  const t = useT();
   const order: Priority[] = ["critical", "strategic", "quick", "watch"];
   return (
     <div className="flex flex-wrap gap-x-5 gap-y-2 border-t border-hairline pt-3">
@@ -181,8 +185,8 @@ function Legend({ changes }: { changes: RegChange[] }) {
         return (
           <span key={p} className={cx("flex items-center gap-2 font-body text-caption text-ink-muted")}>
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: PRIORITY_VAR[p] }} aria-hidden />
-            {PRIORITY_LABEL[p]}
-            <span className="font-mono text-ink-subtle">{n}</span>
+            {t.priority[p]}
+            <Num className="num font-mono text-ink-subtle">{n}</Num>
           </span>
         );
       })}

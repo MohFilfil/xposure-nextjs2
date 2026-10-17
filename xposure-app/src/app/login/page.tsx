@@ -7,7 +7,9 @@ import { ArrowLeft, Box, Lock, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { Chip } from "@/components/ui/Chip";
 import { useSession } from "@/components/SessionProvider";
-import { ROLES, ROLE_ORDER, homeFor, initialOf, type Role } from "@/lib/roles";
+import { useT } from "@/components/I18nProvider";
+import { useRoleCopy } from "@/lib/content";
+import { ROLE_ORDER, homeFor, type Role } from "@/lib/roles";
 import { cx } from "@/lib/utils";
 
 /**
@@ -24,6 +26,8 @@ const ORDER: Role[] = ["compliance", ...ROLE_ORDER.filter((r) => r !== "complian
 export default function LoginPage() {
   const router = useRouter();
   const { role, hydrated, signIn } = useSession();
+  const t = useT();
+  const roleCopy = useRoleCopy();
 
   /* من لديه جلسة محفوظة لا يُسأل مرة أخرى — يُنقل مباشرة إلى صفحة دوره */
   useEffect(() => {
@@ -44,16 +48,12 @@ export default function LoginPage() {
         <header className="flex flex-col items-start gap-5">
           <Logo className="h-[52px] w-[124px]" />
           <span className="rule block w-14" aria-hidden />
-          <h1 className="font-display text-display-lg text-ink">اختر دوراً للدخول</h1>
-          <p className="max-w-[62ch] font-body text-body-lg text-ink-muted">
-            عرض توضيحي بحسابات جاهزة — لا كلمة مرور ولا مصادقة. التطبيق واحد لكل الأدوار، والفرق بينها هو ما يراه كل
-            دور وما يملك فعله فيه.
-          </p>
+          <h1 className="font-display text-display-lg text-ink">{t.login.heading}</h1>
+          <p className="max-w-[62ch] font-body text-body-lg text-ink-muted">{t.login.lede}</p>
         </header>
 
         <ul className="mt-9 flex flex-col gap-3">
           {ORDER.map((r, i) => {
-            const spec = ROLES[r];
             const recommended = r === "compliance";
             return (
               <li key={r} className="animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
@@ -71,26 +71,26 @@ export default function LoginPage() {
                     aria-hidden
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-brand font-body text-body font-bold text-on-brand shadow-glow"
                   >
-                    {initialOf(r)}
+                    {roleCopy.name(r).trim()[0]}
                   </span>
 
                   <span className="flex min-w-0 flex-1 flex-col gap-1">
                     <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-body text-body font-bold text-ink">{spec.label}</span>
-                      {recommended && <Chip>مسار العرض الكامل</Chip>}
+                      <span className="font-body text-body font-bold text-ink">{roleCopy.label(r)}</span>
+                      {recommended && <Chip>{t.login.recommended}</Chip>}
                     </span>
                     <span className="font-body text-body-sm text-ink-muted">
-                      {spec.account.name} — {spec.account.title}
+                      {roleCopy.name(r)} — {roleCopy.title(r)}
                     </span>
-                    <span className="font-body text-body-sm text-ink-muted">{spec.scope}</span>
+                    <span className="font-body text-body-sm text-ink-muted">{roleCopy.scope(r)}</span>
                   </span>
 
                   <span
                     aria-hidden
                     className="hidden shrink-0 items-center gap-2 font-body text-body-sm font-semibold text-brand transition-transform duration-2 ease-out group-hover:-translate-x-1 md:flex"
                   >
-                    دخول
-                    <ArrowLeft size={18} strokeWidth={2} />
+                    {t.login.enter}
+                    <ArrowLeft size={18} strokeWidth={2} className="rtl:rotate-0 ltr:rotate-180" />
                   </span>
                 </button>
               </li>
@@ -102,22 +102,22 @@ export default function LoginPage() {
           <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 font-body text-caption text-ink-muted">
             <li className="flex items-center gap-2">
               <Lock size={14} strokeWidth={2} aria-hidden />
-              نواة معزولة — لا تخرج بيانات المنشأة
+              {t.login.trustIsolation}
             </li>
             <li className="flex items-center gap-2">
               <Box size={14} strokeWidth={2} aria-hidden />
-              النماذج محلياً · Qwen2.5 14B
+              {t.login.trustModels}
             </li>
             <li className="flex items-center gap-2">
               <ShieldCheck size={14} strokeWidth={2} aria-hidden />
-              كل قرار يُكتب في سجل تدقيق غير قابل للتعديل
+              {t.login.trustAudit}
             </li>
           </ul>
           <Link
             href="/"
             className="font-body text-body-sm font-semibold text-brand no-underline transition-colors duration-1 hover:text-brand-hover"
           >
-            العودة إلى الصفحة التعريفية
+            {t.login.backToSite}
           </Link>
         </footer>
       </div>

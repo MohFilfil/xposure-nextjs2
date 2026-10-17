@@ -12,8 +12,12 @@ import { AGENT_STEPS, AgentActivity } from "@/components/ui/AgentActivity";
 import { Reveal } from "@/components/motion/Reveal";
 import { useToast } from "@/components/ui/Toast";
 import { useSession } from "@/components/SessionProvider";
-import { LAST_RUN_STAMPS, SOURCES } from "@/lib/data";
+import { useT } from "@/components/I18nProvider";
+import { Num, Code, DocArrow } from "@/components/ui/Bidi";
+import { useContent } from "@/lib/content";
+import { LAST_RUN_STAMPS } from "@/lib/data";
 import type { Source, SourceState } from "@/lib/types";
+import type { Dict } from "@/lib/i18n/ar";
 import { cx, stamp } from "@/lib/utils";
 
 /**
@@ -25,22 +29,26 @@ import { cx, stamp } from "@/lib/utils";
  * باسم صاحب الجلسة — لا مصدراً مفعّلاً.
  */
 
-const STATE_UI: Record<SourceState, { label: string; icon: typeof Radar; tone: string; note: string }> = {
-  active: { label: "مفعّل", icon: Radar, tone: "text-success", note: "يُفحص بالجدول المعتمد" },
-  paused: { label: "موقوف مؤقتاً", icon: CirclePause, tone: "text-warning", note: "لا يُفحص حتى يُعاد تفعيله" },
-  pending: { label: "بانتظار موافقة المختص", icon: CircleDashed, tone: "text-warning", note: "طلب إضافة لم يُعتمد بعد" },
-  soon: { label: "مُعدّ ولم يُفعّل", icon: CircleSlash, tone: "text-ink-subtle", note: "جاهز في النظام بانتظار التفعيل" }
-};
-
-const FREQUENCIES = [
-  { value: "daily", label: "يومياً · 05:00" },
-  { value: "weekly", label: "أسبوعياً · الأحد 05:00" },
-  { value: "monthly", label: "شهرياً · الأول من كل شهر" }
-];
+function stateUi(t: Dict): Record<SourceState, { label: string; icon: typeof Radar; tone: string }> {
+  return {
+    active: { label: t.sources.stateActive, icon: Radar, tone: "text-success" },
+    paused: { label: t.sources.statePaused, icon: CirclePause, tone: "text-warning" },
+    pending: { label: t.sources.statePending, icon: CircleDashed, tone: "text-warning" },
+    soon: { label: t.sources.stateSoon, icon: CircleSlash, tone: "text-ink-subtle" }
+  };
+}
 
 export default function SourcesPage() {
   const toast = useToast();
   const { can, account } = useSession();
+  const t = useT();
+  const { sources } = useContent();
+  const ui = stateUi(t);
+  const frequencies = [
+    { value: "daily", label: t.sources.freqDaily },
+    { value: "weekly", label: t.sources.freqWeekly },
+    { value: "monthly", label: t.sources.freqMonthly }
+  ];
 
   /* الطلبات المُنشأة في الجلسة تُضاف إلى القائمة المعروضة بحالة «معلّق» */
   const [added, setAdded] = useState<Source[]>([]);
@@ -63,61 +71,67 @@ export default function SourcesPage() {
     );
     timers.current.push(
       setTimeout(() => {
-        toast("info", "اكتمل الفحص. الوكيل متوقّف عند المرحلة الخامسة بانتظار قرارك — لا يعتمد بنداً من تلقائه.");
+        toast("info", t.scan.doneSources);
       }, AGENT_STEPS.length * 900)
     );
   }
 
-  const list = [...SOURCES, ...added];
+  const list = [...sources, ...added];
   const active = list.filter((s) => s.state === "active").length;
   const pending = list.filter((s) => s.state === "pending").length;
   const nameWritten = name.trim().length > 0;
 
   function submitRequest() {
-    const chosen = FREQUENCIES.find((f) => f.value === frequency)?.label ?? "";
+    const chosen = frequencies.find((f) => f.value === frequency)?.label ?? "";
     setAdded((prev) => [
       ...prev,
       {
         id: `SRC-REQ-${prev.length + 1}`,
         name: name.trim(),
         short: "—",
-        docs: docs.trim() || "لم تُحدَّد الوثائق بعد",
+        docs: docs.trim() || t.sources.requestNoDocs,
         state: "pending",
         lastScan: null,
-        frequency: `مقترح: ${chosen}`,
-        lastResult: "طلب إضافة بانتظار موافقة المختص — لا يُفحص قبلها.",
+        frequency: `${t.sources.proposed} ${chosen}`,
+        lastResult: t.sources.requestPendingResult,
         requested: { by: account?.name ?? "—", at: stamp() }
       }
     ]);
     setAsking(false);
     setName("");
     setDocs("");
-    toast("success", "سُجِّل طلب إضافة المصدر باسمك في سجل التدقيق. لن يُفحص قبل موافقة المختص.");
+    toast("success", t.sources.requestDone);
   }
 
   return (
     <Page>
       <PageHead
-        title="المصادر التنظيمية"
+        title={t.sources.title}
         eyebrow={
           <>
-            <Eyebrow tone="live">{active} مصدر مفعّل من {list.length}</Eyebrow>
-            {pending > 0 && <Eyebrow>{pending} طلب بانتظار موافقة المختص</Eyebrow>}
+            <Eyebrow tone="live">
+              <Num>{active}</Num> {t.sources.activeOf} <Num>{list.length}</Num>
+            </Eyebrow>
+            {pending > 0 && (
+              <Eyebrow>
+                <Num>{pending}</Num> {t.sources.pendingRequests}
+              </Eyebrow>
+            )}
           </>
         }
-        lede="الجهات التي يراقبها الوكيل، وبأي تكرار، ومتى فُحص كل منها آخر مرة. إضافة مصدر جديد طلبٌ يحتاج موافقة المختص ولا يبدأ الفحص قبلها."
+        lede={t.sources.lede}
         action={
           <div className="flex flex-wrap items-center gap-3">
             {can("scan") && (
               <Button variant="secondary" onClick={runScan} loading={running !== null && running < AGENT_STEPS.length - 1}>
                 {running === null && <ScanSearch size={20} strokeWidth={2} aria-hidden />}
-                افحص الآن
+                {t.scan.action}
               </Button>
             )}
             {can("addSource") && (
               <Button variant="primary" onClick={() => setAsking(true)}>
                 <Plus size={20} strokeWidth={2} aria-hidden />
-                إضافة مصدر
+                {t.sources.addSource}
               </Button>
             )}
           </div>
@@ -128,7 +142,7 @@ export default function SourcesPage() {
         <section className="flex min-w-0 flex-col gap-4">
           {list.map((source, i) => (
             <Reveal key={source.id} index={i}>
-              <SourceRow source={source} canManage={can("manageAgent")} onToggle={(s) => toast("info", s)} />
+              <SourceRow source={source} canManage={can("manageAgent")} onToggle={(message) => toast("info", message)} />
             </Reveal>
           ))}
         </section>
@@ -137,40 +151,34 @@ export default function SourcesPage() {
           <Reveal index={0}>
             <Card glow={running !== null}>
               <CardHead
-                title="نشاط الوكيل"
-                sub={running !== null ? "فحص جارٍ الآن" : "آخر دورة كاملة — رصد ECC-2:2024"}
+                title={t.agent.title}
+                sub={running !== null ? t.agent.running : t.agent.lastRun}
                 aside={
                   running !== null ? (
-                    <Chip>جارٍ</Chip>
+                    <Chip>{t.agent.runningChip}</Chip>
                   ) : (
-                    <span className="num font-mono text-caption text-ink-subtle" dir="ltr">
-                      2026-09-17
-                    </span>
+                    <Num className="num font-mono text-caption text-ink-subtle">2026-09-17</Num>
                   )
                 }
               />
               <AgentActivity
                 active={running ?? AGENT_STEPS.length - 1}
                 stamps={running === null ? LAST_RUN_STAMPS : undefined}
-                note={
-                  running !== null
-                    ? "المراحل تُكتب في سجل التدقيق مرحلةً مرحلة مع اسم النموذج وإصداره."
-                    : "الوكيل يقف عند المرحلة الخامسة دائماً. لا اعتماد تلقائي ولا إغلاق بند بلا قرار بشري."
-                }
+                note={running !== null ? t.agent.noteRunning : t.agent.noteIdle}
               />
             </Card>
           </Reveal>
 
           <Reveal index={1}>
             <Card>
-              <CardHead title="صلاحية الوكيل على المصادر" />
+              <CardHead title={t.sources.permissions} />
               <ul className="flex flex-col gap-3">
-                <PermRow label="قراءة صفحات الجهة وحفظ الملف الخام" value="مسموح" tone="success" />
-                <PermRow label="المقارنة والتحليل داخل الشبكة" value="مسموح" tone="success" />
-                <PermRow label="إضافة مصدر أو تفعيله" value="بموافقة المختص" tone="warning" />
-                <PermRow label="تعديل أي ملف أو سياسة في المنشأة" value="ممنوع" tone="danger" />
+                <PermRow label={t.sources.permRead} value={t.sources.allowed} tone="success" />
+                <PermRow label={t.sources.permAnalyze} value={t.sources.allowed} tone="success" />
+                <PermRow label={t.sources.permAdd} value={t.sources.needsApproval} tone="warning" />
+                <PermRow label={t.sources.permWrite} value={t.sources.denied} tone="danger" />
               </ul>
-              <CardFoot>لا يخرج نص واحد من الشبكة؛ الجلب قراءة فقط من مصادر منشورة علناً.</CardFoot>
+              <CardFoot>{t.sources.permFoot}</CardFoot>
             </Card>
           </Reveal>
         </div>
@@ -178,41 +186,41 @@ export default function SourcesPage() {
 
       {asking && (
         <Modal
-          title="طلب إضافة مصدر تنظيمي"
-          warning="الإضافة ليست فورية: يُسجَّل الطلب باسمك وينتظر موافقة المختص، ولا يبدأ الفحص قبلها."
+          title={t.sources.requestTitle}
+          warning={t.sources.requestWarning}
           onClose={() => setAsking(false)}
           actions={
             <>
               <Button variant="primary" disabled={!nameWritten} onClick={submitRequest}>
-                إرسال الطلب للموافقة
+                {t.sources.requestSend}
               </Button>
               <Button variant="ghost" onClick={() => setAsking(false)}>
-                إلغاء
+                {t.common.cancel}
               </Button>
               <ButtonNote>
-                {nameWritten ? "يُسجَّل الطلب باسمك ووقته." : "زر الإرسال معطّل حتى تكتب اسم الجهة."}
+                {nameWritten ? t.sources.requestReady : t.sources.requestBlocked}
               </ButtonNote>
             </>
           }
         >
           <div className="flex flex-col gap-5">
             <Input
-              label="اسم الجهة (إلزامي)"
+              label={t.sources.requestNameLabel}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="مثال: الهيئة العامة للأمن الصناعي"
+              placeholder={t.sources.requestNamePlaceholder}
             />
             <Input
-              label="الوثائق المطلوب متابعتها"
+              label={t.sources.requestDocsLabel}
               value={docs}
               onChange={(e) => setDocs(e.target.value)}
-              placeholder="مثال: اللائحة الفنية للمنشآت عالية الخطورة"
+              placeholder={t.sources.requestDocsPlaceholder}
             />
             <Select
-              label="تكرار الفحص المقترح"
+              label={t.sources.requestFreqLabel}
               value={frequency}
               onChange={(e) => setFrequency(e.target.value)}
-              options={FREQUENCIES}
+              options={frequencies}
             />
           </div>
         </Modal>
@@ -234,8 +242,9 @@ function SourceRow({
   canManage: boolean;
   onToggle: (message: string) => void;
 }) {
-  const ui = STATE_UI[source.state];
-  const Icon = ui.icon;
+  const t = useT();
+  const state = stateUi(t)[source.state];
+  const Icon = state.icon;
 
   return (
     <Card className="flex flex-col gap-4">
@@ -244,38 +253,33 @@ function SourceRow({
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-display text-h3 text-ink">{source.name}</h2>
             {/* الاختصار اللاتيني معزول باتجاهه، وإلا التصق بعلامات الترقيم العربية حوله */}
-            <bdi dir="ltr" className="num rounded-sm bg-surface-overlay px-1.5 py-0.5 font-mono text-caption text-ink-muted">
+            <Code className="rounded-sm bg-surface-overlay px-1.5 py-0.5 text-caption text-ink-muted">
               {source.short}
-            </bdi>
+            </Code>
           </div>
           <p className="font-body text-body-sm text-ink-muted">{source.docs}</p>
         </div>
 
-        <span className={cx("flex shrink-0 items-center gap-2 font-body text-body-sm font-semibold", ui.tone)}>
+        <span className={cx("flex shrink-0 items-center gap-2 font-body text-body-sm font-semibold", state.tone)}>
           <Icon size={18} strokeWidth={2} aria-hidden />
-          {ui.label}
+          {state.label}
         </span>
       </div>
 
       <dl className="grid gap-x-6 gap-y-3 border-t border-hairline pt-4 sm:grid-cols-3">
-        <Field label="آخر فحص">
+        <Field label={t.sources.lastScan}>
           {source.lastScan ? (
-            <bdi dir="ltr" className="num font-mono">
-              {source.lastScan}
-            </bdi>
+            <Num className="num font-mono">{source.lastScan}</Num>
           ) : (
-            <span className="text-ink-muted">لم يُفحص بعد</span>
+            <span className="text-ink-muted">{t.sources.notScanned}</span>
           )}
         </Field>
-        <Field label="تكرار الفحص">{source.frequency}</Field>
-        <Field label="الإصدار المتابَع">
+        <Field label={t.sources.frequency}>{source.frequency}</Field>
+        <Field label={t.sources.trackedVersion}>
           {source.versions ? (
-            /* الإصداران داخل bdi واحد باتجاه LTR: ترتيبهما معلومة، وقلبه يعكس معنى الانتقال */
-            <bdi dir="ltr" className="num whitespace-nowrap font-mono">
-              {source.versions.from} → {source.versions.to}
-            </bdi>
+            <DocArrow from={source.versions.from} to={source.versions.to} />
           ) : (
-            <span className="text-ink-muted">—</span>
+            <span className="text-ink-muted">{t.common.none}</span>
           )}
         </Field>
       </dl>
@@ -286,11 +290,8 @@ function SourceRow({
           {source.requested && (
             <>
               {" "}
-              طلبها {source.requested.by} في{" "}
-              <bdi dir="ltr" className="num font-mono">
-                {source.requested.at}
-              </bdi>
-              .
+              {t.sources.requestedBy} {source.requested.by} {t.sources.requestedAt}{" "}
+              <Num className="num font-mono">{source.requested.at}</Num>.
             </>
           )}
         </p>
@@ -298,7 +299,7 @@ function SourceRow({
         <div className="flex items-center gap-3">
           {typeof source.changes === "number" && (
             <span className="font-body text-caption text-ink-muted">
-              <span className="num font-mono font-semibold text-ink">{source.changes}</span> تغييراً جوهرياً منه
+              <Num className="num font-mono font-semibold text-ink">{source.changes}</Num> {t.sources.changesFrom}
             </span>
           )}
           {canManage && source.state !== "pending" && (
@@ -306,14 +307,10 @@ function SourceRow({
               size="sm"
               variant="secondary"
               onClick={() =>
-                onToggle(
-                  source.state === "active"
-                    ? `أُوقف فحص ${source.short} مؤقتاً — يُسجَّل الإيقاف في سجل التدقيق باسمك.`
-                    : `طُلب تفعيل فحص ${source.short}. يبدأ مع أول دورة مجدولة.`
-                )
+                onToggle(source.state === "active" ? t.sources.pausedToast : t.sources.activateToast)
               }
             >
-              {source.state === "active" ? "إيقاف مؤقت" : "تفعيل"}
+              {source.state === "active" ? t.sources.pause : t.sources.activate}
             </Button>
           )}
         </div>

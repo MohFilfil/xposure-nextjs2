@@ -29,10 +29,12 @@ import { Reveal } from "@/components/motion/Reveal";
 import { CountUp } from "@/components/motion/CountUp";
 import { useDecisions } from "@/components/DecisionsProvider";
 import { useSession } from "@/components/SessionProvider";
-import { CHANGES, COMPANY, TASKS } from "@/lib/data";
+import { useT } from "@/components/I18nProvider";
+import { Num, Code, DocArrow } from "@/components/ui/Bidi";
+import { useContent } from "@/lib/content";
 import type { Priority, RegChange, Status } from "@/lib/types";
 import { daysUntil } from "@/lib/utils";
-import { PRIORITY_LABEL, PRIORITY_VAR, STATUS_LABEL, STATUS_VAR } from "@/lib/vocab";
+import { PRIORITY_VAR } from "@/lib/vocab";
 
 /** سلاسل عرض توضيحي لآخر ستة فحوص — تُستبدل بقيم محرك المقارنة عند الربط الفعلي. */
 const TREND = {
@@ -48,6 +50,8 @@ export function ComplianceDashboard() {
   const toast = useToast();
   const { statusOf } = useDecisions();
   const { can } = useSession();
+  const t = useT();
+  const { changes: CHANGES, tasks: TASKS, company } = useContent();
   const [scanStep, setScanStep] = useState<number | null>(null);
 
   /**
@@ -63,7 +67,7 @@ export function ComplianceDashboard() {
         setTimeout(() => tick(i + 1), 900);
       } else {
         setScanStep(null);
-        toast("success", "اكتمل الفحص. لا إصدارات جديدة منذ رصد ECC-2:2024 — والوكيل متوقّف بانتظار قرارك.");
+        toast("success", t.scan.done);
       }
     };
     tick(0);
@@ -96,23 +100,23 @@ export function ComplianceDashboard() {
   const columns: Column<RegChange>[] = [
     {
       key: "title",
-      header: "التغيير",
+      header: t.changes.colChange,
       render: (c) => (
         <>
           <div className="font-medium text-ink">{c.title}</div>
           <div className="num mt-0.5 font-mono text-caption text-ink-subtle">
-            {c.clause} · {c.docTo}
+            <Code>{c.clause}</Code> · <Code>{c.docTo}</Code>
           </div>
         </>
       )
     },
-    { key: "priority", header: "الأولوية", hideBelow: "xs", render: (c) => <PriorityBadge priority={c.priority} /> },
-    { key: "status", header: "الحالة", render: (c) => <StatusBadge status={statusOf(c)} /> },
+    { key: "priority", header: t.changes.priority, hideBelow: "xs", render: (c) => <PriorityBadge priority={c.priority} /> },
+    { key: "status", header: t.changes.status, render: (c) => <StatusBadge status={statusOf(c)} /> },
     {
       key: "effective",
-      header: "تاريخ السريان",
+      header: t.changes.colEffective,
       hideBelow: "sm",
-      render: (c) => <span className="num font-mono">{c.effective}</span>
+      render: (c) => <Num className="num font-mono">{c.effective}</Num>
     }
   ];
 
@@ -127,46 +131,41 @@ export function ComplianceDashboard() {
       <Hero
         eyebrow={
           <>
-            <Eyebrow tone="live">الوكيل يعمل — آخر فحص 2026-09-18 · 05:00</Eyebrow>
-            <Eyebrow>ECC-1:2018 ← ECC-2:2024</Eyebrow>
+            <Eyebrow tone="live">
+              {t.dashboard.agentLive} <Num>2026-09-18 05:00</Num>
+            </Eyebrow>
+            <Eyebrow>
+              <DocArrow from="ECC-1:2018" to="ECC-2:2024" />
+            </Eyebrow>
           </>
         }
         headline={
           criticalOpen > 0 ? (
             <>
-              <HeroFigure tone="danger">{criticalOpen}</HeroFigure> بنود حرجة
-              <br />
-              بانتظار قرارك
+              <HeroFigure tone="danger">{criticalOpen}</HeroFigure> {t.dashboard.criticalAwaiting}
             </>
           ) : awaiting > 0 ? (
             <>
-              <HeroFigure>{awaiting}</HeroFigure> بنداً بانتظار قرارك
-              <br />
-              ولا بند حرج بينها
+              <HeroFigure>{awaiting}</HeroFigure> {t.dashboard.awaitingNoCritical}
             </>
           ) : (
             /* حالة الفراغ المستحقّة: لا تُعرض إلا بعد عمل فعلي، فتُقرأ كإنجاز لا كنقص بيانات */
             <>
-              <HeroFigure tone="success">{total}</HeroFigure> بنداً
-              <br />
-              بُتَّ في جميعها
+              <HeroFigure tone="success">{total}</HeroFigure> {t.dashboard.allDecided}
             </>
           )
         }
         lede={
           awaiting === 0 ? (
-            <>
-              لم يبقَ بند بانتظار قرار. كل قرار سُجِّل في سجل التدقيق باسمك، والمهام المنشأة انتقلت إلى
-              مالكيها. سيظهر هنا أول بند جديد فور رصده في الفحص القادم.
-            </>
+            <>{t.exec.noCriticalBody}</>
           ) : nearest ? (
             <>
-              أقرب موعد سريان <span className="num font-mono text-ink">{nearest.date}</span> — بعد{" "}
-              <span className="num font-mono text-ink">{nearest.days}</span> يوماً، ويستحق فيه {nearest.count} تغييراً
-              دفعةً واحدة. {COMPANY}.
+              {t.exec.upcoming}: <Num className="num font-mono text-ink">{nearest.date}</Num> —{" "}
+              <Num className="num font-mono text-ink">{nearest.days}</Num> {t.common.days}, <Num>{nearest.count}</Num>{" "}
+              {t.common.changes}. {company}.
             </>
           ) : (
-            <>لا مواعيد سريان مرصودة بعد. {COMPANY}.</>
+            <>{company}.</>
           )
         }
         actions={
@@ -174,18 +173,18 @@ export function ComplianceDashboard() {
             {firstOpen ? (
               <Button variant="primary" onClick={() => router.push(`/changes/${firstOpen.id}`)}>
                 <Stamp size={20} strokeWidth={2} aria-hidden />
-                {criticalOpen > 0 ? "ابدأ بالبند الحرج" : "ابدأ المراجعة"}
+                {criticalOpen > 0 ? t.dashboard.startCritical : t.dashboard.startReview}
               </Button>
             ) : can("scan") ? (
               <Button variant="primary" onClick={runScan}>
                 <ScanSearch size={20} strokeWidth={2} aria-hidden />
-                افحص الآن
+                {t.scan.action}
               </Button>
             ) : null}
             {firstOpen && can("scan") && (
               <Button variant="ghost" onClick={runScan}>
                 <ScanSearch size={20} strokeWidth={2} aria-hidden />
-                افحص الآن
+                {t.scan.action}
               </Button>
             )}
           </>
@@ -197,12 +196,12 @@ export function ComplianceDashboard() {
            * تقولان من أين جاءت النسبة — وهو أول ما يُسأل عن أي درجة مركّبة.
            */
           <Card className="w-full xl:w-[300px]">
-            <Gauge value={78} size={188} label="درجة الامتثال" />
+            <Gauge value={78} size={188} label={t.dashboard.complianceScore} />
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <MiniStat label="ضوابط مستوفاة" value={39} total={50} tone="var(--success)" />
-              <MiniStat label="فجوات مفتوحة" value={11} total={50} tone="var(--danger)" />
+              <MiniStat label={t.dashboard.controlsMet} value={39} total={50} tone="var(--success)" />
+              <MiniStat label={t.dashboard.gapsOpen} value={11} total={50} tone="var(--danger)" />
             </div>
-            <CardFoot>الضوابط المستوفاة فعلياً، لا التغييرات المراجَعة.</CardFoot>
+            <CardFoot>{t.dashboard.scoreFoot}</CardFoot>
           </Card>
         }
       />
@@ -210,59 +209,59 @@ export function ComplianceDashboard() {
       <Reveal>
         <MetricBar>
           <StatCard
-            label="تغييرات جوهرية"
+            label={t.dashboard.metricChanges}
             value={total}
-            context="من أصل 47 فرقاً مرصوداً؛ 35 شكلياً استُبعد بالكود"
+            context={t.dashboard.metricChangesCtx}
             icon={GitCompare}
             points={TREND.changes}
-            trend={{ delta: "+2 منذ آخر إصدار", direction: "up", good: false }}
+            trend={{ delta: "+2", direction: "up", good: false }}
           />
           <StatCard
-            label="قضايا حرجة مفتوحة"
+            label={t.dashboard.metricCritical}
             value={criticalOpen}
             /**
              * النغمة تتبع القيمة لا التسمية: صفرُ قضايا حرجة مفتوحة خبر سارّ،
              * وعرضه بالأحمر مع خيط إنذار جانبي يقلب معناه إلى نذير.
              */
-            context={
-              criticalOpen > 0
-                ? "بلا قرار بعد — من أصل 4 بنود حرجة مرصودة"
-                : "بلا قرار بعد — من أصل 4 بنود حرجة مرصودة. لم يبقَ منها شيء."
-            }
+            context={criticalOpen > 0 ? t.dashboard.metricCriticalCtx : t.dashboard.metricCriticalCtxNone}
             icon={AlertTriangle}
             tone={criticalOpen > 0 ? "danger" : "success"}
             alert={criticalOpen > 0}
             points={TREND.critical}
             trend={
               criticalOpen > 0
-                ? { delta: "+1 هذا الأسبوع", direction: "up", good: false }
-                : { delta: "أُغلقت كلها", direction: "down", good: true }
+                ? { delta: "+1", direction: "up", good: false }
+                : { delta: "0", direction: "down", good: true }
             }
           />
           <StatCard
-            label="بانتظار قرار بشري"
+            label={t.dashboard.metricAwaiting}
             value={awaiting}
-            context="لا يُغلق الوكيل أي بند من تلقائه"
+            context={t.dashboard.metricAwaitingCtx}
             icon={Stamp}
             points={TREND.awaiting}
-            trend={{ delta: "-2 بعد قرارَي أمس", direction: "down", good: true }}
+            trend={{ delta: "-2", direction: "down", good: true }}
           />
           <StatCard
-            label="المهام المنجزة"
+            label={t.dashboard.metricDoneTasks}
             value={`${doneTasks} / ${TASKS.length}`}
-            context="آخر إنجاز: تعميم المصادقة — الدفعة الأولى"
+            context={t.dashboard.metricDoneTasksCtx}
             icon={ListChecks}
             tone="success"
             points={TREND.tasks}
-            trend={{ delta: "+1 هذا الأسبوع", direction: "up", good: true }}
+            trend={{ delta: "+1", direction: "up", good: true }}
           />
         </MetricBar>
       </Reveal>
 
       <Section
-        title="خريطة مواعيد السريان"
-        sub="التواريخ ليست موزّعة — إنها متكدّسة. كل عنقود موجة عمل واحدة."
-        aside={<span className="num font-mono text-caption text-ink-subtle">المرجع: 2026-09-18</span>}
+        title={t.dashboard.deadlineMap}
+        sub={t.dashboard.deadlineSub}
+        aside={
+          <span className="num font-mono text-caption text-ink-subtle">
+            {t.common.reference}: <Num>2026-09-18</Num>
+          </span>
+        }
       >
         <Reveal>
           <Card>
@@ -270,11 +269,11 @@ export function ComplianceDashboard() {
             <CardFoot>
               {nearest ? (
                 <>
-                  أقرب موجة: <span className="num font-mono text-ink">{nearest.date}</span> — {nearest.count} تغييراً
-                  تستحق في اليوم نفسه، خلال {nearest.days} يوماً. اضغط أي عنقود لعرض تغييراته.
+                  <Num className="num font-mono text-ink">{nearest.date}</Num> — <Num>{nearest.count}</Num>{" "}
+                  {t.common.changes}, <Num>{nearest.days}</Num> {t.common.days}. {t.dashboard.impactUrgencySub}
                 </>
               ) : (
-                "لا مواعيد سريان مرصودة بعد."
+                t.common.none
               )}
             </CardFoot>
           </Card>
@@ -285,53 +284,61 @@ export function ComplianceDashboard() {
         <Reveal index={0} className="h-full">
           <Card className="h-full">
             <CardHead
-              title="الأثر × الاستعجال"
-              sub="اضغط أي خانة لعرض تغييراتها"
-              aside={<span className="num font-mono text-caption text-ink-subtle">{total} تغييراً</span>}
+              title={t.dashboard.impactUrgency}
+              sub={t.dashboard.impactUrgencySub}
+              aside={
+                <span className="num font-mono text-caption text-ink-subtle">
+                  <Num>{total}</Num> {t.common.changes}
+                </span>
+              }
             />
-            <div className="grid grid-cols-[64px_1fr_1fr] gap-3">
+            {/**
+             * الخانات كانت تُحجز ارتفاعاً ثابتاً (124px) ينتهي بفراغ تحت الرقم؛ صارت
+             * تحمل عناوين البنود التي تمثّلها، فالفراغ امتلأ بمعلومة لا بحشو.
+             */}
+            <div className="grid grid-cols-[72px_1fr_1fr] gap-3">
               <span />
-              <span className="pb-1 text-center font-body text-caption text-ink-subtle">أثر مرتفع</span>
-              <span className="pb-1 text-center font-body text-caption text-ink-subtle">أثر منخفض</span>
+              <span className="pb-1 text-center font-body text-caption text-ink-subtle">{t.dashboard.highImpact}</span>
+              <span className="pb-1 text-center font-body text-caption text-ink-subtle">{t.dashboard.lowImpact}</span>
 
-              <span className="flex items-center font-body text-caption text-ink-muted">عاجل</span>
-              <MatrixCell priority="critical" count={byPriority("critical")} note="تنفيذ فوري" />
-              <MatrixCell priority="quick" count={byPriority("quick")} note="إجراء سريع" />
+              <span className="flex items-center font-body text-caption text-ink-muted">{t.dashboard.urgent}</span>
+              <MatrixCell priority="critical" items={CHANGES.filter((c) => c.priority === "critical")} />
+              <MatrixCell priority="quick" items={CHANGES.filter((c) => c.priority === "quick")} />
 
-              <span className="flex items-center font-body text-caption text-ink-muted">غير عاجل</span>
-              <MatrixCell priority="strategic" count={byPriority("strategic")} note="تخطيط مبكر" />
-              <MatrixCell priority="watch" count={byPriority("watch")} note="متابعة" />
+              <span className="flex items-center font-body text-caption text-ink-muted">{t.dashboard.notUrgent}</span>
+              <MatrixCell priority="strategic" items={CHANGES.filter((c) => c.priority === "strategic")} />
+              <MatrixCell priority="watch" items={CHANGES.filter((c) => c.priority === "watch")} />
             </div>
           </Card>
         </Reveal>
 
         <Reveal index={1} className="h-full">
           <Card className="flex h-full flex-col">
-            <CardHead title="حالة المراجعة البشرية" sub="لا يُستبعد أي تغيير تلقائياً" />
+            <CardHead title={t.dashboard.reviewState} sub={t.dashboard.reviewStateSub} />
             {/* الأشرطة تتوسّط ما تبقى من ارتفاع اللوح بدل أن تتكدّس أعلاه بجوار لوح أطول */}
             <div className="flex flex-1 flex-col justify-center gap-4">
               {(["new", "pending", "approved", "rejected"] as Status[]).map((s) => (
                 <StatusRow key={s} status={s} count={byStatus(s)} total={total} />
               ))}
             </div>
-            <CardFoot>تصنيف «لا ينطبق» يحتاج موافقة المختص، ويُسجَّل في سجل التدقيق باسمه.</CardFoot>
+            <CardFoot>{t.dashboard.reviewStateFoot}</CardFoot>
           </Card>
         </Reveal>
       </div>
 
       <Section
-        title="أحدث التغييرات"
-        sub="أحدث خمسة بنود وصلت من محرك المقارنة"
+        title={t.dashboard.latestChanges}
+        sub={t.dashboard.latestChangesSub}
         aside={
           <Button variant="secondary" size="sm" onClick={() => router.push("/changes")}>
-            عرض الكل
-            <ChevronLeft size={18} strokeWidth={2} aria-hidden />
+            {t.dashboard.viewAll}
+            <ChevronLeft size={18} strokeWidth={2} aria-hidden className="ltr:rotate-180" />
           </Button>
         }
       >
         {CHANGES.length > 0 ? (
           <DataTable
-            caption="أحدث خمسة تغييرات مرصودة"
+            caption={t.changes.latestCaption}
             columns={columns}
             rows={CHANGES.slice(0, 5)}
             onRowClick={(c) => router.push(`/changes/${c.id}`)}
@@ -339,12 +346,12 @@ export function ComplianceDashboard() {
         ) : (
           <Card flush>
             <EmptyState
-              title="لا تغييرات مرصودة بعد"
-              description="شغّل فحصاً للمصادر المفعّلة لبدء رصد الإصدارات الجديدة والمسودات."
+              title={t.dashboard.noChanges}
+              description={t.dashboard.noChangesHint}
               action={
                 can("scan") ? (
                   <Button variant="secondary" onClick={runScan}>
-                    افحص الآن
+                    {t.scan.action}
                   </Button>
                 ) : undefined
               }
@@ -362,6 +369,7 @@ export function ComplianceDashboard() {
  * الذي يقوم عليه المنتج، فيُرى في الشاشة لا في الوثائق وحدها.
  */
 function ScanOverlay({ step }: { step: number }) {
+  const t = useT();
   return (
     <Portal>
       <div
@@ -370,7 +378,7 @@ function ScanOverlay({ step }: { step: number }) {
         aria-live="polite"
       >
         <MotifSpinner className="h-14 w-14" />
-        <p className="font-display text-h1 text-ink">جارٍ فحص المصادر</p>
+        <p className="font-display text-h1 text-ink">{t.agent.scanning}</p>
         <div className="panel w-full max-w-[520px] p-5">
           <AgentActivity active={step} />
         </div>
@@ -384,10 +392,10 @@ function MiniStat({ label, value, total, tone }: { label: string; value: number;
   return (
     <div className="well p-3">
       {/* الكسر معزول باتجاه LTR وإلا انقلب «39 / 50» إلى «50 / 39» داخل النص العربي */}
-      <div dir="ltr" className="num text-end font-mono text-h2 text-ink">
+      <Num className="num block text-end font-mono text-h2 text-ink">
         <CountUp value={value} />
         <span className="text-caption text-ink-subtle"> / {total}</span>
-      </div>
+      </Num>
       <div className="mt-1 font-body text-caption text-ink-muted">{label}</div>
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-surface" aria-hidden>
         <div className="h-full animate-bar-grow rounded-full" style={{ width: `${(value / total) * 100}%`, background: tone }} />
@@ -398,6 +406,7 @@ function MiniStat({ label, value, total, tone }: { label: string; value: number;
 
 /** شريط الحالة يمتلئ بعد التركيب فينقل فرق النسب بين الحالات بصرياً قبل قراءة الأرقام. */
 function StatusRow({ status, count, total }: { status: Status; count: number; total: number }) {
+  const t = useT();
   const [filled, setFilled] = useState(false);
   useEffect(() => {
     const t = requestAnimationFrame(() => setFilled(true));
@@ -411,30 +420,32 @@ function StatusRow({ status, count, total }: { status: Status; count: number; to
       <span className="w-[76px] shrink-0">
         <StatusBadge status={status} />
       </span>
+      {/**
+       * الشريط محايد اللون كالشارة: التمييز هنا بالطول لا باللون، فلا يتزاحم مع
+       * لون الأولوية في الجدول المجاور.
+       */}
       <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-sunken">
         <span
-          className="block h-full rounded-full"
-          style={{
-            width: filled ? `${pct}%` : "0%",
-            background: STATUS_VAR[status],
-            transition: "width var(--dur-5) var(--ease-out)"
-          }}
+          className="block h-full rounded-full bg-ink-muted"
+          style={{ width: filled ? `${pct}%` : "0%", transition: "width var(--dur-5) var(--ease-out)" }}
         />
       </span>
-      <span className="num w-8 text-end font-mono text-body-sm text-ink">{count}</span>
-      <span className="sr-only">{STATUS_LABEL[status]}</span>
+      <Num className="num w-8 text-end font-mono text-body-sm text-ink">{count}</Num>
+      <span className="sr-only">{t.status[status]}</span>
     </div>
   );
 }
 
-function MatrixCell({ priority, count, note }: { priority: Priority; count: number; note: string }) {
+function MatrixCell({ priority, items }: { priority: Priority; items: RegChange[] }) {
   const router = useRouter();
+  const t = useT();
+  const count = items.length;
   return (
     <button
       type="button"
       onClick={() => router.push(`/changes?priority=${priority}`)}
-      aria-label={`${PRIORITY_LABEL[priority]}: ${count} تغييراً`}
-      className="well group relative flex min-h-[124px] flex-col items-start justify-between gap-3 overflow-hidden p-4 text-start transition-[background-color,border-color,transform] duration-2 ease-out hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--brand)_35%,var(--hairline))]"
+      aria-label={`${t.priority[priority]}: ${count}`}
+      className="well group relative flex flex-col items-start gap-2.5 overflow-hidden p-4 text-start transition-[background-color,border-color,transform] duration-2 ease-out hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--brand)_35%,var(--hairline))]"
     >
       <span
         aria-hidden
@@ -447,13 +458,25 @@ function MatrixCell({ priority, count, note }: { priority: Priority; count: numb
         style={{ background: PRIORITY_VAR[priority] }}
       />
       {/* الشارة تحمل اسم الأولوية: محورا المصفوفة يقولان «عاجل/أثر مرتفع» لا «حرج» */}
-      <PriorityBadge priority={priority} />
-      <span className="flex items-baseline gap-2">
-        <span className="num font-mono text-metric-sm text-ink">
+      <span className="flex w-full items-center justify-between gap-2">
+        <PriorityBadge priority={priority} />
+        <span className="num font-mono text-metric-sm leading-none text-ink">
           <CountUp value={count} />
         </span>
-        <span className="font-body text-caption text-ink-muted">{note}</span>
       </span>
+      {/* عناوين البنود نفسها بدل سطر وصفي عام: الخانة تصير قائمة عمل لا رقماً */}
+      <ul className="flex w-full flex-col gap-1">
+        {items.slice(0, 3).map((c) => (
+          <li key={c.id} className="truncate font-body text-caption text-ink-muted">
+            {c.title}
+          </li>
+        ))}
+        {count > 3 && (
+          <li className="font-body text-caption text-ink-subtle">
+            +<Num>{count - 3}</Num>
+          </li>
+        )}
+      </ul>
     </button>
   );
 }
