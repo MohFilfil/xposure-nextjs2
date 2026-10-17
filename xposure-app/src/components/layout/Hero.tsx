@@ -37,8 +37,14 @@ export function Hero({
         style={{ background: "var(--edge-top)" }}
       />
 
-      <div className="relative flex flex-col items-start gap-10 xl:flex-row xl:items-center xl:justify-between xl:gap-16">
-        <div className="min-w-0 max-w-[62ch] animate-fade-up">
+      {/**
+        * الفجوة بين الجملة واللوح الجانبي كانت 64px فوق عمود نصّ محدود بـ 62ch،
+        * فتترك في منتصف الصدارة فراغاً بعرض بطاقة كاملة على شاشة 1366. العمود
+        * صار ينمو حتى 70ch والفجوة 40px: الجملة تملأ مكانها، واللوح يبقى ملتصقاً
+        * بحافة النهاية — بلا فراغ بينهما يُقرأ كخطأ تخطيط.
+        */}
+      <div className="relative flex flex-col items-start gap-10 xl:flex-row xl:items-center xl:justify-between xl:gap-10">
+        <div className="min-w-0 max-w-[70ch] flex-1 animate-fade-up">
           {eyebrow && <div className="mb-5 flex flex-wrap items-center gap-2">{eyebrow}</div>}
 
           <h1 className="font-display text-display-lg text-ink md:text-display-xl">{headline}</h1>

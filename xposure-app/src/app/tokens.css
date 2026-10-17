@@ -12,7 +12,7 @@
   --border: #242D42;
   --border-focus: #818CF8;
   --ink: #F5F7FA;
-  --ink-muted: #8D97AC;
+  --ink-muted: #A6B0C3;
   --success: #22C55E;
   --on-success: #052E17;
   --warning: #F59E0B;
@@ -23,7 +23,7 @@
   --on-info: #082F49;
   --brand-2: #A855F7;
   --surface-sunken: #02040A;
-  --ink-subtle: #7E8AA3;
+  --ink-subtle: #8D97AC;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
   --shadow-lg: 0 16px 40px rgba(0,0,0,0.6);
@@ -96,8 +96,8 @@
   --fs-h3: 16px; --lh-h3: 24px; --fw-h3: 600;
   --fs-body-lg: 17px; --lh-body-lg: 30px; --fw-body-lg: 400;
   --fs-body: 15px; --lh-body: 26px; --fw-body: 400;
-  --fs-body-sm: 13px; --lh-body-sm: 21px; --fw-body-sm: 400;
-  --fs-caption: 12px; --lh-caption: 16px; --fw-caption: 500;
+  --fs-body-sm: 14px; --lh-body-sm: 22px; --fw-body-sm: 400;
+  --fs-caption: 13px; --lh-caption: 18px; --fw-caption: 500;
   --fs-code: 13px; --lh-code: 20px; --fw-code: 400;
   --fs-metric-xl: 60px; --lh-metric-xl: 62px; --fw-metric-xl: 500;
   --fs-metric: 40px; --lh-metric: 44px; --fw-metric: 500;

@@ -204,6 +204,23 @@ export function ComplianceDashboard() {
             <CardFoot>{t.dashboard.scoreFoot}</CardFoot>
           </Card>
         }
+        /**
+         * شريط الحقائق يغلق الصدارة بثلاثة أرقام مساندة. وجوده هنا ليس زينة:
+         * بدونه ينتهي ارتفاع الصدارة عند ارتفاع اللوح الجانبي، فيبقى تحت الجملة
+         * فراغ بمقدار نصف اللوح.
+         */
+        facts={[
+          {
+            label: t.exec.decidedFact,
+            value: (
+              <bdi dir="ltr">
+                {total - awaiting} / {total}
+              </bdi>
+            )
+          },
+          { label: t.tasks.overdue, value: TASKS.filter((task) => task.status !== "approved" && daysUntil(task.due) < 0).length },
+          { label: t.exec.upcomingWaves, value: new Set(CHANGES.map((c) => c.effective)).size }
+        ]}
       />
 
       <Reveal>
