@@ -29,3 +29,11 @@ export const STATUS_VAR: Record<Status, string> = {
   approved: "var(--success)",
   rejected: "var(--danger)"
 };
+
+/** ترتيب الاستعجال من الأعلى للأدنى — يُستخدم حصراً لترتيب الجداول بالنقر على العمود. */
+export const PRIORITY_RANK: Record<Priority, number> = {
+  critical: 0,
+  strategic: 1,
+  quick: 2,
+  watch: 3
+};

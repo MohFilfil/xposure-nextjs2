@@ -32,6 +32,10 @@ for (const theme of themes) {
   for (const shadow of tokens.shadow.tokens) {
     lines.push(`  --${shadow.name}: ${shadow.value[theme]};`);
   }
+  /** طبقات السطح (زجاج، خيوط، تدرّجات) تتبدّل مع السمة تماماً كالألوان. */
+  for (const effect of tokens.effect.tokens) {
+    lines.push(`  --${effect.name}: ${effect.value[theme]};`);
+  }
   lines.push("}");
   lines.push("");
 }
@@ -47,7 +51,8 @@ for (const group of tokens.type.groups) {
     );
   }
 }
-for (const key of ["spacing", "radius", "zIndex"]) {
+/** مدد الحركة ومنحنياتها لا تتبدّل مع السمة — قيمة واحدة لكل سمة. */
+for (const key of ["spacing", "radius", "zIndex", "motion"]) {
   for (const token of tokens[key].tokens) {
     lines.push(`  --${token.name}: ${token.value};`);
   }
@@ -62,6 +67,8 @@ writeFileSync(out, lines.join("\n"), "utf8");
 const count =
   tokens.color.tokens.length * themes.length +
   tokens.shadow.tokens.length * themes.length +
+  tokens.effect.tokens.length * themes.length +
+  tokens.motion.tokens.length +
   Object.keys(tokens.type.families).length +
   tokens.spacing.tokens.length +
   tokens.radius.tokens.length +

@@ -1,35 +1,77 @@
 import { cx } from "@/lib/utils";
 
 /**
- * خلفية surface-raised دائماً و radius-lg بلا استثناء.
- * لا ظل تحت بطاقة ساكنة؛ الظل لحالة hover على بطاقة قابلة للنقر بالكامل فقط.
+ * اللوح: الوحدة البصرية الأساسية. خلفيته تدرّج مضاء من الأعلى وظلّه بعيد —
+ * لا حدّ رمادي صلب. الفصل عن الخلفية يقع بالإضاءة والعمق، لأن عشرة صناديق
+ * محاطة بخطوط تُقرأ كمخطط سلكي لا كواجهة.
+ *
+ * ثلاثة خيارات لا رابع:
+ * - hover: رفع 2px وظل — للوح الذي يفتح النقر عليه شاشة.
+ * - glow: حدّ بتدرّج الهوية — للوح واحد «بطل» في الشاشة، لا أكثر.
+ * - glass: خلفية ضبابية — للأسطح التي يمرّ المحتوى تحتها، لا للوح داخل التدفق.
  */
 export function Card({
   children,
   className,
-  style
+  style,
+  hover,
+  glow,
+  glass,
+  flush
 }: {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  hover?: boolean;
+  glow?: boolean;
+  glass?: boolean;
+  /** يلغي الحشو الداخلي: للوح يحتوي جدولاً أو رسماً يمتد إلى حوافه. */
+  flush?: boolean;
 }) {
   return (
-    <section className={cx("rounded-lg border border-border bg-surface-raised p-5", className)} style={style}>
+    <section
+      className={cx(
+        glass ? "glass relative rounded-lg border" : "panel",
+        !flush && "p-6",
+        glow && "ring-gradient",
+        hover && "lift cursor-pointer hover:border-[color-mix(in_srgb,var(--brand)_40%,var(--hairline))]",
+        className
+      )}
+      style={style}
+    >
       {children}
     </section>
   );
 }
 
-export function CardHead({ title, aside }: { title: string; aside?: React.ReactNode }) {
+/**
+ * ترويسة اللوح: عنوان بوزن كامل، وسطر سياق اختياري تحته بلون أخفت.
+ * الـ aside للشارة أو الرقم المصاحب — لا لزر إجراء، فالإجراء يقع في تذييل اللوح
+ * أو في ترويسة الصفحة حيث يبحث عنه المستخدم.
+ */
+export function CardHead({
+  title,
+  sub,
+  aside
+}: {
+  title: string;
+  sub?: string;
+  aside?: React.ReactNode;
+}) {
   return (
-    <header className="mb-4 flex items-center justify-between gap-4">
-      <h2 className="font-display text-h2 text-ink">{title}</h2>
-      {aside}
+    <header className="mb-5 flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <h2 className="font-display text-h2 text-ink">{title}</h2>
+        {sub && <p className="mt-1 font-body text-body-sm text-ink-muted">{sub}</p>}
+      </div>
+      {aside && <div className="shrink-0">{aside}</div>}
     </header>
   );
 }
 
 /** الفاصل الأفقي فوق التذييل إلزامي — لا يُترك بمسافة بيضاء وحدها. */
 export function CardFoot({ children }: { children: React.ReactNode }) {
-  return <footer className="mt-4 border-t border-border pt-3 font-body text-body-sm text-ink-muted">{children}</footer>;
+  return (
+    <footer className="mt-5 border-t border-hairline pt-4 font-body text-body-sm text-ink-muted">{children}</footer>
+  );
 }

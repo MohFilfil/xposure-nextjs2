@@ -6,14 +6,15 @@
 
 /* خطوط next/font تُحقن كمتغيرات، ونربطها بأدوار الطباعة في tokens.json */
 :root {
-  --font-display: var(--font-cairo), "Segoe UI", system-ui, sans-serif;
-  --font-body: var(--font-tajawal), "Segoe UI", system-ui, sans-serif;
-  --font-mono: var(--font-roboto-mono), "Courier New", monospace;
+  --font-display: var(--font-plex-arabic), "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-plex-arabic), "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), "Courier New", monospace;
 }
 
 @layer base {
   html {
     color-scheme: dark;
+    scroll-behavior: smooth;
   }
   html[data-theme="light"] {
     color-scheme: light;
@@ -25,9 +26,40 @@
     font-size: var(--fs-body);
     line-height: var(--lh-body);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
     /* الأرقام غربية (0-9) دائماً، حتى داخل النص العربي */
     font-variant-numeric: lining-nums;
+    /**
+     * التتبّع (letter-spacing) صفر على مستوى المستند ولا يُفتح إلا على نص لاتيني
+     * أو رقمي صريح: العربية خط متصل، وأي تباعد بين حروفها يفكّ الوصل ويكسر الكلمة.
+     * هذا يعني أن نمط «عنوان صغير متباعد الحروف» الشائع في الواجهات اللاتينية
+     * ممنوع هنا — تمييز التسميات الصغيرة يكون بالوزن واللون والحجم لا بالتباعد.
+     */
+    letter-spacing: 0;
   }
+
+  /* العناوين الكبيرة تحتاج تقارباً رأسياً أقل من الافتراضي العربي، لا أفقياً */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  /**
+   * هالات الخلفية: طبقة واحدة ثابتة خلف كل شيء تُعطي العمق الذي يجعل الأسطح
+   * الزجاجية مقروءة. لا تتكرر داخل بطاقة، ولا تتحرك — الحركة هنا تشتّت لا تشرح.
+   */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--gradient-mesh);
+    /* تبدّل السمة يجب أن يُقرأ كتبدّل إضاءة، لا كوميض */
+    transition: background-image var(--dur-4) var(--ease-smooth);
+  }
+
   /* حلقة التركيز لا تُحذف أبداً عن أي عنصر تفاعلي */
   :focus-visible {
     outline: 2px solid var(--border-focus);
@@ -37,13 +69,194 @@
   a {
     color: var(--brand);
     text-decoration: none;
+    transition: color var(--dur-1) var(--ease-out);
   }
   a:hover {
     color: var(--brand-hover);
     text-decoration: underline;
   }
+
+  ::selection {
+    background: color-mix(in srgb, var(--brand) 32%, transparent);
+    color: var(--ink);
+  }
+
+  /* شريط التمرير جزء من الواجهة لا زائدة عليها */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: var(--radius-full);
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--ink-subtle);
+    background-clip: content-box;
+  }
 }
 
+@layer components {
+  /**
+   * اللوح (panel) هو الوحدة البصرية الأساسية، وقد حلّ محل «البطاقة ذات الحدّ».
+   * الفرق جوهري: الفصل عن الخلفية يقع بالإضاءة والعمق — تدرّج رأسي خفيف، خيط ضوء
+   * على الحافة العليا، وظل بعيد — لا بخط رمادي حول كل صندوق. عشرة صناديق محاطة
+   * بخطوط تُقرأ كمخطط سلكي؛ عشرة ألواح مضاءة تُقرأ كواجهة.
+   */
+  .panel {
+    position: relative;
+    background: var(--gradient-panel);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: var(--edge-top);
+    border-start-start-radius: var(--radius-lg);
+    border-start-end-radius: var(--radius-lg);
+    pointer-events: none;
+  }
+
+  /* اللوح الغائر: للأخاديد داخل لوح آخر (مسار شريط، خانة رقم، نص مقتبس) */
+  .well {
+    background: var(--surface-sunken);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+  }
+
+  /**
+   * خط افتتاح القسم: يبدأ بلون الهوية عند حافة البداية ويتلاشى نحو النهاية.
+   * يفتتح القسم ولا يحبسه — لذلك لا يُغلق بخط مقابل في الأسفل.
+   */
+  .rule {
+    height: 2px;
+    border-radius: var(--radius-full);
+    background: var(--rule-brand);
+  }
+
+  /**
+   * الأرقام: خانات متساوية العرض دائماً. بدونها يرقص عرض الرقم أثناء العدّ
+   * وتتزحزح البطاقة كلها — وهو أوضح عيب يفضح لوحة معلومات غير مصقولة.
+   */
+  .num {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+  }
+
+  /**
+   * السطح الزجاجي: للأسطح التي يمرّ المحتوى تحتها فقط (شريط التنقل، رأس الجدول
+   * اللاصق، لوحة الأوامر). البديل الصلب إلزامي للمتصفحات بلا backdrop-filter،
+   * وإلا صار النص فوق خلفية نصف شفافة بلا تباين.
+   */
+  .glass {
+    background: var(--surface-raised);
+    border-color: var(--glass-border);
+  }
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .glass {
+      background: var(--glass-bg);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+      backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    }
+  }
+
+  /**
+   * الظهور بالتتابع: العنصر يبدأ مخفياً ويُكشف حين يدخل إطار العرض.
+   * الحالة النهائية تُكتب بـ data-shown حتى لو لم يعمل JS مطلقاً —
+   * انظر .reveal:not([data-shown]) التي تُلغى تحت prefers-reduced-motion.
+   */
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity var(--dur-4) var(--ease-out),
+      transform var(--dur-4) var(--ease-out);
+    transition-delay: var(--reveal-delay, 0ms);
+    /**
+     * بلا will-change: فهو يبقى مفعّلاً بعد انتهاء الكشف فيحجز طبقة تركيب لكل
+     * عنصر في الصفحة، ويجعل كل واحد منها حاوية قياس لأي طبقة fixed بداخله.
+     * انتقال لمرة واحدة على opacity وtransform لا يحتاجه أصلاً.
+     */
+  }
+  .reveal[data-shown="true"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* الرفع عند hover: 2px لا أكثر، ومقروناً بظل — الرفع وحده لا يُقرأ */
+  .lift {
+    transition:
+      transform var(--dur-2) var(--ease-out),
+      box-shadow var(--dur-2) var(--ease-out),
+      border-color var(--dur-2) var(--ease-out);
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* هيكل التحميل — يحجز نفس مساحة المحتوى القادم فلا تقفز الصفحة */
+  .skeleton {
+    background:
+      var(--sheen) 0 0 / 200% 100% no-repeat,
+      var(--surface-overlay);
+    border-radius: var(--radius-sm);
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  /* نص بتدرّج الهوية — للأرقام الكبيرة والعناوين البطولية فقط */
+  .ink-gradient {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /**
+   * حدّ متدرّج حول بطاقة: طبقة تدرّج مقنّعة بـ mask فلا تتأثر الخلفية.
+   * يُستخدم لبطاقة واحدة «بطلة» في الشاشة، لا لكل البطاقات.
+   */
+  .ring-gradient {
+    position: relative;
+  }
+  .ring-gradient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--gradient-brand);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+/**
+ * احترام تفضيل تقليل الحركة: تُلغى كل الحركات، وتُفرض الحالة النهائية للعناصر
+ * التي تبدأ مخفية — بلا هذا السطر تبقى الصفحة فارغة لمن فعّل التفضيل.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -51,5 +264,95 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .lift:hover {
+    transform: none;
+  }
+}
+
+/**
+ * الطباعة: سجل التدقيق وشاشة مراجعة التغيير يُطبعان كدليل امتثال يُرفق بملف.
+ * الورقة بيضاء دائماً مهما كانت السمة، والزخرفة كلها تُزال — الهدف نص مقروء
+ * وحدود واضحة، لا لقطة من الشاشة.
+ */
+@media print {
+  :root,
+  [data-theme="dark"],
+  [data-theme="light"] {
+    --surface: #ffffff;
+    --surface-raised: #ffffff;
+    --surface-overlay: #f2f4f8;
+    --surface-sunken: #f2f4f8;
+    --ink: #0b1220;
+    --ink-muted: #3d4557;
+    --ink-subtle: #5a6274;
+    --border: #c8cdd8;
+    --hairline: #e2e5ec;
+    --glass-bg: #ffffff;
+    --glass-border: #c8cdd8;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-card: none;
+    --shadow-hover: none;
+    --shadow-glow: none;
+    --gradient-mesh: none;
+  }
+
+  html {
+    color-scheme: light;
+  }
+  body {
+    background: #fff;
+  }
+  body::before {
+    display: none;
+  }
+
+  /**
+   * هيكل التطبيق ليس جزءاً من الدليل، لكن لا يُحذف عنصر بنوعه:
+   * `header` هو أيضاً ترويسة كل بطاقة (CardHead)، و`button` هو أيضاً رأس العمود
+   * القابل للترتيب — وحذفهما بالنوع يمحو العناوين وأسماء الأعمدة من المطبوع.
+   * ما يُحذف موسوم صراحة بـ print:hidden في المكوّن الذي يعرف أنه تحكّم لا محتوى.
+   */
+  [role="status"],
+  [role="dialog"],
+  [role="tooltip"] {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  /* البطاقة تُطبع بحدّ رفيع بلا ظل، ولا تُقطع بين صفحتين */
+  section,
+  table,
+  li {
+    break-inside: avoid;
+  }
+  .glass {
+    background: #fff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .sticky,
+  .fixed {
+    position: static !important;
+  }
+
+  /* الروابط داخل المطبوع تفقد وظيفتها، فيبقى نصها بلا تمييز لوني مضلّل */
+  a {
+    color: inherit;
+    text-decoration: none;
   }
 }

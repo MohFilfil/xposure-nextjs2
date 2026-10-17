@@ -1,0 +1,486 @@
+/**
+ * الصفحة التعريفية العامة. ألوانها وقياساتها خاصة بها ولا تُشتق من tokens التطبيق:
+ * التطبيق يُقرأ ساعاتٍ ويحتاج أسطحاً هادئة ومتدرّجة، وهذه الصفحة تُقرأ دقيقةً واحدة
+ * وتحتاج مساحات لون مصمتة وحجماً. ولذلك هنا: لا تدرّجات، ولا ظلال على ساكن،
+ * ولا خطوط شعرية فاصلة — الفصل بحقل لون أو بقفزة حجم.
+ *
+ * المحرّك البصري واحد: فتحة العدسة (aperture) التي يعنيها اسم المنتج.
+ * تظهر هيئةً عملاقة في الصدارة، وقناعاً لكل صورة، وشكلاً لزر الإجراء، ونقطةً
+ * أمام عناصر القوائم. شكل واحد بأربعة مقاسات — لا شكل ثانٍ معه.
+ */
+
+.site {
+  /* أرض واحدة، حبر واحد، لكنة واحدة. الحقول خطوات نغمة من الأرض نفسها. */
+  --s-ground: #07090f;
+  --s-field: #111827;
+  --s-field-2: #1b2335;
+  --s-ink: #f4f6fa;
+  --s-ink-dim: #aab3c4;
+  --s-diff: 20px;
+  --s-accent: #6366f1; /* taste-skill-ignore: لون هوية مسجّل في design-system/tokens.json، لا خيار أسلوبي */
+  /* اللكنة كخلفية تكفي، وككتابة ترسب تحت 4.5:1 على الأرض الداكنة، فلها درجة أفتح */
+  --s-accent-text: #8b8df7;
+  --s-on-accent: #02030a; /* 4.6:1 فوق اللكنة؛ #060811 كان يرسب عند 4.49:1 */
+  --s-add: #34d399;
+  --s-del: #f87171;
+
+  --s-margin: clamp(16px, 4vw, 72px);
+  --s-gap: clamp(72px, 8vw, 132px);
+
+  position: relative;
+  z-index: 0;
+  background: var(--s-ground);
+  color: var(--s-ink);
+  overflow-x: clip;
+  font-family: var(--font-body);
+  letter-spacing: 0;
+}
+
+/* هالات التطبيق لا تمتد إلى هذه الصفحة: الأرض هنا مصمتة بلا استثناء */
+.site::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--s-ground);
+  pointer-events: none;
+}
+
+.site ::selection {
+  background: var(--s-accent);
+  color: var(--s-on-accent);
+}
+
+/* ---------- الطباعة: خمس درجات لا سادس ---------- */
+
+.s-display {
+  font-size: clamp(34px, 5vw, 64px);
+  line-height: 0.98;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.s-h2 {
+  font-size: clamp(30px, 4vw, 54px);
+  line-height: 1.04;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.s-h3 {
+  font-size: 27px;
+  line-height: 1.22;
+  font-weight: 600;
+  margin: 0;
+}
+
+.s-lede {
+  font-size: 21px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 54ch;
+}
+
+.s-body {
+  font-size: 17px;
+  line-height: 1.62;
+  margin: 0;
+  max-width: 62ch;
+}
+
+/* النص الجاري بالحبر الكامل؛ الرمادي للملاحظات الثانوية وحدها */
+.s-note {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--s-ink-dim);
+  margin: 0;
+}
+
+/* ---------- الشبكة ---------- */
+
+.s-wrap {
+  max-width: 1320px;
+  margin-inline: auto;
+  padding-inline: var(--s-margin);
+}
+
+.s-section {
+  padding-block: var(--s-gap);
+}
+
+/* ---------- المحرّك: فتحة العدسة ---------- */
+
+/**
+ * القناع السداسي هو فتحة العدسة نفسها. كل صورة في الصفحة تُرى من خلاله،
+ * فتصير الصورة «ما تكشفه الفتحة» لا مستطيلاً موضوعاً في تخطيط.
+ */
+.s-iris-mask {
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+/** الزر مقصوص بزاويتين من هندسة الشفرة نفسها — لا زوايا مستديرة في الصفحة. */
+.s-cut {
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+
+.s-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 30px;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: inherit;
+  background: var(--s-accent);
+  color: var(--s-on-accent);
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease;
+}
+.s-btn:hover {
+  background: #7c7ff5;
+  transform: translateY(-2px);
+}
+.s-btn:active {
+  transform: translateY(0);
+}
+
+.s-btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 26px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--s-ink);
+  background: var(--s-field-2);
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease;
+}
+.s-btn-quiet:hover {
+  background: #26314a;
+  transform: translateY(-2px);
+}
+
+.site a {
+  color: inherit;
+}
+
+/**
+ * الأزرار روابط، و.site a أعلى تخصيصاً من .s-btn فكانت ترث حبر الصفحة الفاتح
+ * فوق أرضية اللكنة — نصٌّ فاتح على بنفسجي عند 4.1:1. اللون يُعاد هنا صراحةً.
+ */
+.site a.s-btn {
+  color: var(--s-on-accent);
+}
+.site a.s-btn-quiet {
+  color: var(--s-ink);
+}
+
+.site :focus-visible {
+  outline: 3px solid var(--s-accent);
+  outline-offset: 3px;
+}
+
+/* ---------- الصدارة ---------- */
+
+.s-hero {
+  position: relative;
+  min-height: 92svh;
+  display: flex;
+  align-items: center;
+  padding-block: clamp(80px, 12vh, 150px);
+}
+
+/**
+ * الهيئة العملاقة تدخل من جهة النهاية (اليسار في واجهة عربية) وتقصّها حافة
+ * الشاشة من ثلاث جهات، فيبقى للعنوان نصف الشاشة من جهة البداية.
+ */
+.s-hero-iris {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: -19%;
+  translate: 0 -50%;
+  width: min(94vh, 772px);
+  aspect-ratio: 1;
+  color: var(--s-accent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.s-hero-text {
+  position: relative;
+  z-index: 1;
+  /* بالبكسل لا بـ ch: وحدة ch تقاس بخط الحاوية لا بخط العنوان الذي بداخلها */
+  max-width: min(620px, 53%);
+}
+
+@media (max-width: 900px) {
+  .s-hero {
+    min-height: auto;
+    padding-block: 72px 0;
+    /* الصدارة عمود على الهاتف: بدون ذلك تبقى الهيئة عنصراً مرناً بجانب النص */
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .s-hero-text {
+    max-width: none;
+  }
+  .s-hero-iris {
+    position: relative;
+    /* inset اختصار فيزيائي ولا يصفّر inset-inline-end المنطقي، فتبقى الهيئة مزاحة فوق النص */
+    inset: auto;
+    inset-inline-end: auto;
+    inset-inline-start: auto;
+    inset-block-start: auto;
+    translate: none;
+    /* المخطط يضع الهيئة أسفل العنوان على الهاتف، مقصوصةً بالحواف الثلاث */
+    order: 2;
+    /**
+     * z-index: auto لا 0 — عنصر موضوع بـ z-index: 0 يُنشئ سياق تراصّ ويُرسم فوق
+     * الأقسام غير الموضوعة التي تليه، فيغطّي عنوان القسم التالي. والهامش السالب
+     * أسفلها كان يسحب القسم التالي فوقها فيضاعف المشكلة.
+     */
+    z-index: auto;
+    width: 132vw;
+    margin-inline-start: -22vw;
+    margin-block-start: 40px;
+  }
+}
+
+/* ---------- شريط التنقل: شريط عادي بلا زجاج ولا حبّة عائمة ---------- */
+
+.s-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-block: 26px;
+}
+
+.s-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  font-size: 17px;
+}
+.s-nav-links a {
+  text-decoration: none;
+}
+.s-nav-links a:hover {
+  color: var(--s-accent);
+}
+
+@media (max-width: 760px) {
+  .s-nav-links {
+    gap: 18px;
+    font-size: 15px;
+  }
+  .s-nav-hide {
+    display: none;
+  }
+}
+
+/* ---------- الحقول ---------- */
+
+.s-field {
+  background: var(--s-field);
+}
+.s-field-accent {
+  background: var(--s-accent);
+  color: var(--s-on-accent);
+}
+
+/* ---------- لوح الواجهة الحقيقية (data-ui) ---------- */
+
+/**
+ * شظايا من واجهة المنتج نفسها، مبنية بـ HTML بمقاسها الحقيقي وبمحتواها الحقيقي.
+ * تحتفظ بحدّها لأنها اقتباس من واجهة قائمة، لا عنصر من عناصر هذه الصفحة.
+ * ولا خط أحادي فيها ولا خارجها: رقم كبير بخط أحادي يُقرأ زيّاً لا قياساً،
+ * والأرقام الجدولية (s-fig) تكفي للمحاذاة في خط النص نفسه.
+ */
+.s-ui {
+  background: #0e1422;
+  border: 1px solid #242d42; /* taste-skill-ignore: حدّ شظية الواجهة data-ui، من أعراف التطبيق المقتبَس */
+  font-family: var(--font-body);
+}
+
+/**
+ * الأرقام خارج شظايا الواجهة: خط النص نفسه بخانات متساوية العرض.
+ * ولا تنكسر: تاريخ ينقسم إلى «2026-12-» و«31» على سطرين يُقرأ رقمين لا تاريخاً.
+ */
+.s-fig {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  white-space: nowrap;
+}
+
+.s-diff-add {
+  background: color-mix(in srgb, var(--s-add) 20%, transparent);
+  color: var(--s-add);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  padding: 2px 4px;
+  font-weight: 500;
+}
+
+.s-diff-del {
+  background: color-mix(in srgb, var(--s-del) 20%, transparent);
+  color: var(--s-del);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  padding: 2px 4px;
+  font-weight: 500;
+}
+
+/* ---------- لوحة البنود ---------- */
+
+/**
+ * اسم البند يتقلّص على الشاشات الضيّقة: فوق 24px يُعدّ عنواناً فيلزمه سطران،
+ * وأسماء البنود التنظيمية أطول من أن تُختصر — فالحجم هو ما ينزل، لا النص.
+ */
+.s-tile-title {
+  margin: 0;
+  font-size: clamp(18px, 2.2vw, 27px);
+  line-height: 1.24;
+  font-weight: 700;
+}
+
+.s-tiles {
+  display: grid;
+  /**
+   * minmax(0, 1fr) لا 1fr: عنصر الشبكة لا ينكمش دون عرض محتواه افتراضياً
+   * (min-width: auto)، فكان عنوان عربي طويل يضاعف عرض عمودين ويدفع ثلاثة
+   * مربّعات خارج الشاشة عند x سالب. القيمة تسمح للعمود بالنزول تحت محتواه.
+   */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.s-tile {
+  background: var(--s-field);
+  padding: 26px;
+  /**
+   * لا aspect-ratio: المربّع الذي يمتدّ عمودين يصير ضعف ارتفاع جيرانه فيترك
+   * تحتها شريطاً ميتاً. الشبكة تسوّي ارتفاع الصف وحدها، ويكفي حدّ أدنى.
+   */
+  min-height: 196px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  text-decoration: none;
+}
+.s-tile-head {
+  grid-column: span 2;
+  background: var(--s-accent);
+  color: var(--s-on-accent);
+  justify-content: space-between;
+}
+@media (max-width: 900px) {
+  .s-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .s-tile-head {
+    grid-column: span 2;
+    min-height: 128px;
+  }
+}
+
+/* ---------- الحركة ---------- */
+
+/**
+ * ظهور أجزاء كل قسم بالتتابع: العنوان ثم النص ثم الصورة. المحتوى مكتوب في
+ * الصفحة دائماً؛ الحركة تُضاف بعد التركيب فقط، فإن تعطّل السكربت ظهر كل شيء.
+ */
+.s-rise {
+  opacity: 0;
+  transform: translateY(26px);
+}
+.s-ready .s-rise {
+  transition:
+    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--d, 0ms);
+}
+.s-ready .s-rise[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/** الحركة التوقيعية: الفتحة تنفتح على النص المتغيّر. */
+@keyframes s-shutter {
+  from {
+    clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%);
+  }
+  to {
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  }
+}
+@keyframes s-settle {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: none;
+  }
+}
+.s-shutter[data-shown="true"] {
+  animation: s-shutter 1100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.s-shutter[data-shown="true"] img {
+  animation: s-settle 1600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/** الصورة الوحيدة المتحرّكة: انجراف بطيء دائم على صورة واحدة. */
+@keyframes s-drift {
+  0%,
+  100% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.12) translate3d(1.5%, -1.5%, 0);
+  }
+}
+.s-drift {
+  animation: s-drift 26s ease-in-out infinite;
+}
+
+@keyframes s-iris-in {
+  from {
+    opacity: 0;
+    transform: rotate(-22deg) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.s-ready .s-hero-iris {
+  animation: s-iris-in 1400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s-rise {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .s-shutter[data-shown="true"],
+  .s-shutter[data-shown="true"] img,
+  .s-drift,
+  .s-ready .s-hero-iris {
+    animation: none !important;
+  }
+  .s-btn:hover,
+  .s-btn-quiet:hover {
+    transform: none;
+  }
+}

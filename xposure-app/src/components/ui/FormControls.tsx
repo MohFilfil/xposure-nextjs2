@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { ChevronDown } from "lucide-react";
 import { cx } from "@/lib/utils";
 
 /**
@@ -9,7 +10,9 @@ import { cx } from "@/lib/utils";
  * حلقة التركيز 3px شفافة حول الحقل بأكمله.
  */
 const FIELD =
-  "w-full rounded-md border border-border bg-surface p-3 font-body text-body text-ink transition-shadow duration-150 " +
+  "w-full rounded-md border border-border bg-surface p-3 font-body text-body text-ink " +
+  "transition-[box-shadow,border-color,background-color] duration-2 ease-out " +
+  "placeholder:text-ink-subtle hover:border-[color-mix(in_srgb,var(--brand)_35%,var(--border))] " +
   "focus:border-border-focus focus:outline-none focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--border-focus)_35%,transparent)]";
 
 function Wrapper({
@@ -30,7 +33,7 @@ function Wrapper({
       </label>
       {children}
       {error && (
-        <p className="font-body text-body-sm text-danger" role="alert">
+        <p className="animate-fade-in font-body text-body-sm text-danger" role="alert">
           {error}
         </p>
       )}
@@ -76,13 +79,26 @@ export function Select({
   const id = useId();
   return (
     <Wrapper label={label} error={error} htmlFor={id}>
-      <select id={id} className={cx(FIELD, error && "border-danger", className)} {...props}>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      {/* السهم مرسوم بأيقونة النظام نفسها بدل سهم المتصفح، فيتطابق شكل الحقول في كل الصفحات */}
+      <div className="relative">
+        <select
+          id={id}
+          className={cx(FIELD, "cursor-pointer appearance-none pe-10", error && "border-danger", className)}
+          {...props}
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          size={18}
+          strokeWidth={2}
+          aria-hidden
+          className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-ink-muted"
+        />
+      </div>
     </Wrapper>
   );
 }
@@ -105,7 +121,13 @@ export function Radio({
   ...props
 }: { label: React.ReactNode } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label className="inline-flex cursor-pointer items-start gap-3 rounded-md border border-border p-4 font-body text-body text-ink has-[:checked]:bg-surface-overlay">
+    <label
+      className={cx(
+        "inline-flex cursor-pointer items-start gap-3 rounded-md border border-border p-4 font-body text-body text-ink",
+        "transition-[background-color,border-color] duration-2 ease-out hover:border-[color-mix(in_srgb,var(--brand)_35%,var(--border))]",
+        "has-[:checked]:border-brand has-[:checked]:bg-surface-overlay"
+      )}
+    >
       <input type="radio" className="mt-1 h-[18px] w-[18px] accent-brand" {...props} />
       <span>{label}</span>
     </label>

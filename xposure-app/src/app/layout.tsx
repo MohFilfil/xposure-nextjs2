@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import { Cairo, Roboto_Mono, Tajawal } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SessionProvider } from "@/components/SessionProvider";
 import { DecisionsProvider } from "@/components/DecisionsProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 
-const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["600", "700"], variable: "--font-cairo", display: "swap" });
-const tajawal = Tajawal({ subsets: ["arabic", "latin"], weight: ["400", "500", "700"], variable: "--font-tajawal", display: "swap" });
-const mono = Roboto_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-roboto-mono", display: "swap" });
+const plexArabic = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-plex-arabic",
+  display: "swap"
+});
+const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-plex-mono", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Xposure — رصد التغيرات التنظيمية وإدارة الامتثال",
@@ -16,12 +21,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" data-theme="dark" className={`${cairo.variable} ${tajawal.variable} ${mono.variable}`}>
+    <html lang="ar" dir="rtl" data-theme="dark" className={`${plexArabic.variable} ${plexMono.variable}`}>
       <body>
         <ThemeProvider>
-          <DecisionsProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </DecisionsProvider>
+          <SessionProvider>
+            <DecisionsProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </DecisionsProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

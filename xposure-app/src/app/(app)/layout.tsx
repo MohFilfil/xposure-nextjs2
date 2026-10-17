@@ -1,5 +1,10 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { RequireSession } from "@/components/RequireSession";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <RequireSession>
+      <AppShell>{children}</AppShell>
+    </RequireSession>
+  );
 }
