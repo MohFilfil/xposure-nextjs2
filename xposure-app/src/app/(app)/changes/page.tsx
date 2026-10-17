@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CalendarClock, ChevronLeft, ChevronRight, Download, List, SlidersHorizontal, X } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight, List, SlidersHorizontal, X } from "lucide-react";
 import { Eyebrow, Page, PageHead } from "@/components/layout/Page";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -13,7 +13,6 @@ import { SkeletonTable } from "@/components/ui/Skeleton";
 import { Input, Select } from "@/components/ui/FormControls";
 import { DensityToggle, useDensity } from "@/components/ui/DensityToggle";
 import { Reveal } from "@/components/motion/Reveal";
-import { useToast } from "@/components/ui/Toast";
 import { useDecisions } from "@/components/DecisionsProvider";
 import { useSession } from "@/components/SessionProvider";
 import { useT } from "@/components/I18nProvider";
@@ -29,7 +28,6 @@ const PER_PAGE = 6;
 
 function ChangesView() {
   const router = useRouter();
-  const toast = useToast();
   const params = useSearchParams();
   const { statusOf } = useDecisions();
   const { can } = useSession();
@@ -41,7 +39,6 @@ function ChangesView() {
   const [priority, setPriority] = useState(params.get("priority") ?? "all");
   const [agency, setAgency] = useState("all");
   const [page, setPage] = useState(1);
-  const [exporting, setExporting] = useState(false);
   const { density, setDensity } = useDensity();
   /**
    * عنقود في خريطة المواعيد يفتح هذه الشاشة على موجته — فيصل الرسم بالعمل.
@@ -88,15 +85,6 @@ function ChangesView() {
     setAgency("all");
     setWave(null);
     setPage(1);
-  }
-
-  /** التصدير يستغرق وقتاً فعلياً عند الربط — الزر يقول ذلك بدل أن يبدو بلا استجابة. */
-  function exportOscal() {
-    setExporting(true);
-    setTimeout(() => {
-      setExporting(false);
-      toast("success", t.toast.oscalExported);
-    }, 900);
   }
 
   /** الفلاتر المفعّلة كوسوم قابلة للإزالة فرادى — مصدرها الحالة نفسها لا نسخة منها. */
@@ -183,14 +171,6 @@ function ChangesView() {
           </>
         }
         lede={t.changes.lede}
-        action={
-          can("export") ? (
-            <Button variant="secondary" loading={exporting} onClick={exportOscal}>
-              {!exporting && <Download size={20} strokeWidth={2} aria-hidden />}
-              {t.common.export} OSCAL
-            </Button>
-          ) : undefined
-        }
       />
 
       <Reveal className="rounded-lg border border-border bg-surface-raised p-5 shadow-card print:hidden">

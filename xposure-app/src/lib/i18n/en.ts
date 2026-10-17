@@ -807,6 +807,135 @@ export const en: Dict = {
     mailBody: "Facility:\nControls we comply with:\nNumber of clauses tracked:\n\nPreferred contact:"
   },
 
+  integrations: {
+    title: "Integrations",
+    lede:
+      "Every technical connection between Xposure and the facility's systems: what it reads, what it writes, and under which permission. No connection is enabled without approval, and no write permission is granted implicitly.",
+    connected: "Connected",
+    readOnly: "Read only",
+    writeOnApproval: "Writes after specialist approval",
+    notConnected: "Not connected",
+    planned: "Planned",
+    permissionLevel: "Permission level",
+    lastSync: "Last sync",
+    scope: "Scope",
+    whatItReads: "What it reads",
+    whatItWrites: "What it writes",
+    nothing: "Nothing",
+    testConnection: "Test connection",
+    tested: "Connection healthy. Response time 240 ms.",
+    exportNow: "Export now",
+    exported: "The file was exported to the internal reports folder.",
+    requestConnection: "Request this connection",
+    requested: "The request was logged in your name. The connection does not start before specialist approval.",
+    grcTitle: "Why this page exists",
+    grcBody:
+      "Xposure does not replace an existing GRC system — it feeds it: detected clauses, decisions and tasks are exported in standard formats or written straight into the existing system under a limited, logged permission.",
+    oscalTitle: "OSCAL export",
+    oscalScope: "Control catalogue and decisions in OSCAL 1.1.2 (JSON)",
+    oscalReads: "Controls, detected changes, and review decisions",
+    oscalWrites: "An export file in the internal reports folder — it writes to no system",
+    odooTitle: "Odoo — task system",
+    odooScope: "The “Regulatory compliance” project and its tasks",
+    odooReads: "Task status, due dates and owners",
+    odooWrites: "Creates a task after explicit approval and updates its status — it never closes a task",
+    grcConnTitle: "Enterprise GRC system",
+    grcConnScope: "Internal control register and risk matrix",
+    grcConnReads: "The current control register, to map it against detected clauses",
+    grcConnWrites: "Updates control status after specialist approval — planned, not yet enabled",
+    ldapTitle: "Identity directory (LDAP)",
+    ldapScope: "Users and roles",
+    ldapReads: "Identity, role and organisational group",
+    ldapWrites: "Nothing — read only",
+    foot: "Every write is logged in the audit log in the name of whoever approved it, never in the agent's name."
+  },
+
+  deployment: {
+    title: "Deployment options",
+    lede:
+      "Where Xposure runs, and who owns the hardware and the data in each option. The choice is technical and regulatory, not commercial — what differs is the network boundary, not the feature list.",
+    sameProduct: "The same product in every option: the features are identical; only where it runs differs.",
+    onPremTitle: "On-premises",
+    onPremBody:
+      "Runs on facility hardware inside its network, with no outbound port open except to fetch publicly published documents. The default for defence facilities and sensitive entities.",
+    onPremPoints: [
+      "Data, models and logs all stay inside the perimeter",
+      "Only the fetch stage reaches out, to public authority pages",
+      "Updates arrive as a signed package the technical admin approves"
+    ],
+    localCloudTitle: "Local cloud",
+    localCloudBody:
+      "Runs in an in-Kingdom cloud with an approved provider, in a tenant dedicated to the facility. Suits those without a data centre who must still meet data-classification rules.",
+    localCloudPoints: [
+      "An isolated tenant per facility, with no shared compute",
+      "The models run in that same tenant, not behind an external API",
+      "Data residency stays in-Kingdom and is documented in the hosting contract"
+    ],
+    groupTitle: "Multi-company group",
+    groupBody:
+      "One instance serving several companies in a group, each with its own data, users and audit log, plus a consolidated group-level view.",
+    groupPoints: [
+      "Each company's data is isolated from the others inside the same instance",
+      "Regulatory sources are shared where they match and separated where they differ",
+      "A group-level compliance report plus one per company"
+    ],
+    requirementsTitle: "What it takes to run",
+    req1: "A server with at least one GPU accelerator (48GB) for the local models",
+    req2: "A PostgreSQL database and storage for the raw files",
+    req3: "A service account with limited read access to product and control systems",
+    req4: "Outbound access to regulatory authority pages only",
+    noPricing:
+      "No prices and no subscriptions on this page: choosing between these options is a technical and regulatory decision that precedes any commercial conversation."
+  },
+
+  help: {
+    title: "User guide",
+    lede: "Two minutes, not a manual: what you do on this screen, and what you do not.",
+    yourRole: "Your role",
+    dailyFlow: "Your daily flow",
+    whereToStart: "Where to start",
+    rules: "Rules that hold for every role",
+    rule1: "The agent always stops at the fifth stage: it approves no clause, closes none, and modifies no file.",
+    rule2: "Every decision is written to the audit log with its author and time, and is never deleted or edited.",
+    rule3: "Rejection needs a written reason; approval creates a task with a named owner and a due date.",
+    rule4: "Facility data never leaves the network, and the models run on its own hardware.",
+    shortcuts: "Shortcuts that shorten the path",
+    shortcutsNote: "Press ? on any screen to see every shortcut.",
+    stepsFor: {
+      compliance: [
+        "Open the dashboard: the headline says how many items await your decision, and which is due soonest.",
+        "Press “Start with the critical item” to open the review screen on the first undecided clause.",
+        "Read the text before and after, then the citation from the document, then the affected assets.",
+        "Approve the recommendation and a task is created in its owner's name, or reject it with a written reason.",
+        "After a decision the system moves to the next item automatically — j and k move you by hand."
+      ],
+      exec: [
+        "Open the dashboard: the compliance score and open critical items lead it.",
+        "Review the effective-date map: the dates are stacked, and each cluster is one wave of work.",
+        "Open any critical item to read its text and impact — the decision on it belongs to the compliance officer.",
+        "Watch the overdue tasks: they are the only measure of execution rather than review."
+      ],
+      owner: [
+        "Open the dashboard: your tasks, ordered by nearest due date.",
+        "Select any task to open the regulatory clause that caused it and read why it exists.",
+        "Review “what your work touches”: the products and processes your tasks will affect.",
+        "Close the task in Odoo — the agent does not close it for you and does not mark it done."
+      ],
+      auditor: [
+        "Open the dashboard: the entry count, and agent entries separated from human ones.",
+        "Open the full audit log and search by user name or clause id.",
+        "Review the evidence panel: the raw file and its hash, the model name and version.",
+        "Open any clause to read it — you will find no approve or reject button on any screen."
+      ],
+      admin: [
+        "Open the dashboard: source health, model status and cycle time.",
+        "Review paused or pending sources, and enable what the specialist has approved.",
+        "Run a manual cycle when needed and watch the five stages through to the stop.",
+        "Check the model status and instruction version — they are what gets written into every audit entry."
+      ]
+    }
+  },
+
   toast: {
     notifications: "You have 4 critical issues awaiting your decision.",
     oscalExported: "The OSCAL file was exported to the internal reports folder."

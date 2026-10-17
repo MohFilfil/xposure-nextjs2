@@ -26,6 +26,9 @@ const ROUTES = [
   ["/tasks", [GUARD]],
   ["/sources", [GUARD]],
   ["/audit", [GUARD]],
+  ["/integrations", [GUARD]],
+  ["/deployment", [GUARD]],
+  ["/help", [GUARD]],
   ["/settings", [GUARD]]
 ];
 

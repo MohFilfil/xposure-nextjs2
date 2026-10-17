@@ -5,10 +5,13 @@ import { usePathname } from "next/navigation";
 import {
   Box,
   GitCompare,
+  BookOpen,
   History,
   LayoutDashboard,
   ListChecks,
   Lock,
+  Plug,
+  Server,
   PanelRightClose,
   PanelRightOpen,
   Radar,
@@ -41,6 +44,9 @@ export const NAV_ITEMS: Record<string, NavItem> = {
   "/tasks": { href: "/tasks", key: "tasks", icon: ListChecks, group: "groupWork", countKey: "openTasks" },
   "/sources": { href: "/sources", key: "sources", icon: Radar, group: "groupSystem", countKey: "pendingApproval" },
   "/audit": { href: "/audit", key: "audit", icon: History, group: "groupSystem" },
+  "/integrations": { href: "/integrations", key: "integrations", icon: Plug, group: "groupSystem" },
+  "/deployment": { href: "/deployment", key: "deployment", icon: Server, group: "groupSystem" },
+  "/help": { href: "/help", key: "help", icon: BookOpen, group: "groupSystem" },
   "/settings": { href: "/settings", key: "settings", icon: Settings2, group: "groupSystem" }
 };
 

@@ -53,35 +53,35 @@ export const ROLES: Record<Role, RoleSpec> = {
     scope: "يرى الصورة الكاملة: درجة الامتثال، القضايا الحرجة، ومواعيد السريان القادمة. لا يبتّ في البنود بنفسه.",
     account: { name: "سلطان المطيري", title: "الرئيس التنفيذي لأمن المعلومات", email: "s.almutairi@internal.local" },
     permissions: ["export"],
-    nav: ["/dashboard", "/changes", "/tasks", "/audit", "/settings"]
+    nav: ["/dashboard", "/changes", "/tasks", "/audit", "/deployment", "/help", "/settings"]
   },
   compliance: {
     label: "مسؤول الامتثال",
     scope: "يراجع كل تغيير ويبتّ فيه: اعتماد التوصية فتُنشأ مهمة، أو رفضها بسبب مكتوب. هذا الدور صاحب القرار.",
     account: { name: "محمد الفلفل", title: "مسؤول الامتثال — صلاحية مراجعة واعتماد", email: "m.alfilfil@internal.local" },
     permissions: ["decide", "requestAnalysis", "scan", "addSource", "export", "resetDemo"],
-    nav: ["/dashboard", "/changes", "/tasks", "/sources", "/audit", "/settings"]
+    nav: ["/dashboard", "/changes", "/tasks", "/sources", "/audit", "/integrations", "/help", "/settings"]
   },
   owner: {
     label: "مالك عملية / منتج",
     scope: "يرى مهامه هو والعمليات والمنتجات المتأثرة بها فقط — لا طابور المراجعة كاملاً.",
     account: { name: "فهد العتيبي", title: "مدير أمن المعلومات — مالك عمليات", email: "f.alotaibi@internal.local" },
     permissions: [],
-    nav: ["/dashboard", "/tasks", "/changes", "/settings"]
+    nav: ["/dashboard", "/tasks", "/changes", "/help", "/settings"]
   },
   auditor: {
     label: "مدقّق — اطّلاع فقط",
     scope: "يقرأ ولا يكتب: سجل التدقيق والأدلة وقرارات المراجعين. لا يملك زر اعتماد ولا رفض في أي شاشة.",
     account: { name: "عبدالله الشمري", title: "مدقّق داخلي", email: "a.alshamri@internal.local" },
     permissions: ["export"],
-    nav: ["/dashboard", "/changes", "/tasks", "/sources", "/audit", "/settings"]
+    nav: ["/dashboard", "/changes", "/tasks", "/sources", "/audit", "/help", "/settings"]
   },
   admin: {
     label: "مسؤول تقني",
     scope: "يشغّل الوكيل ويراقبه: صحة المصادر، حالة النماذج، مستوى التبنّي والربط التقني. لا يبتّ في محتوى البنود.",
     account: { name: "ياسر الزهراني", title: "مسؤول الأنظمة التقنية", email: "y.alzahrani@internal.local" },
     permissions: ["scan", "addSource", "manageAgent", "export", "resetDemo"],
-    nav: ["/dashboard", "/sources", "/audit", "/settings"]
+    nav: ["/dashboard", "/sources", "/audit", "/integrations", "/deployment", "/help", "/settings"]
   }
 };
 
