@@ -22,6 +22,62 @@ const DEMO_MAIL =
   "&body=" +
   encodeURIComponent("المنشأة:\nالضوابط التي نلتزم بها:\nعدد البنود المتابَعة:\n\nيُفضّل التواصل عبر:");
 
+/** نقاط الألم كما تُسمع من مسؤول امتثال في منشأة صناعية — سؤال وجوابه اليوم. */
+const PAINS = [
+  {
+    q: "متى صدر الإصدار الجديد؟",
+    a: "يُنشَر على موقع الجهة بلا إشعار يصلك، ويُكتشَف غالباً من سؤال مدقّق أو من زميل في منشأة أخرى."
+  },
+  {
+    q: "ما الذي تغيّر فعلاً؟",
+    a: "مقارنة وثيقتين بمئات الصفحات سطراً سطراً، ومعظم الفروق ترقيم وتنسيق يستهلك الوقت ولا يغيّر التزاماً واحداً."
+  },
+  {
+    q: "من يتأثّر به عندنا؟",
+    a: "الربط بين بند تنظيمي ومنتج وعملية وضابط داخلي مخزّن في رؤوس أشخاص وجداول متفرّقة، ويغيب بغيابهم."
+  },
+  {
+    q: "من قرّر، وعلى أي نص؟",
+    a: "القرار يُتّخَذ في اجتماع أو رسالة، فلا يبقى منه أثر يقول متى كان، وعلى أي نصّ بُنيَ، وما الدليل الذي سيُعرَض لاحقاً."
+  },
+  {
+    q: "متى يسري؟",
+    a: "مواعيد السريان متكدّسة في تواريخ قليلة، ولا تُرى كموجة عمل واحدة إلا قبل أسابيع من استحقاقها."
+  }
+];
+
+/**
+ * الأدوار الخمسة كما تُعرَض لزائر لا يعرف المنتج: اسمه، ثم السؤال الذي
+ * تفتح شاشته لأجله، ثم ما يراه فعلاً. تطابق lib/roles.ts في التطبيق.
+ */
+const ROLES_ON_SITE = [
+  {
+    name: "مسؤول الامتثال",
+    question: "«ما الذي ينتظر قراري اليوم؟»",
+    sees: "طابور المراجعة كاملاً: النص قبل وبعد، الأصول المتأثرة، والتوصية. صلاحية الاعتماد والرفض عنده وحده."
+  },
+  {
+    name: "القيادة التنفيذية",
+    question: "«أين نقف، وما الذي قد يُحرجنا؟»",
+    sees: "درجة الامتثال، البنود الحرجة المفتوحة، ومواعيد السريان القادمة — بلا طابور يومي ولا أزرار قرار."
+  },
+  {
+    name: "مالك العملية أو المنتج",
+    question: "«ما المطلوب منّي أنا؟»",
+    sees: "مهامه وحدها مرتّبة بالأقرب استحقاقاً، والمنتجات والعمليات التي ستتأثر بتنفيذها."
+  },
+  {
+    name: "المدقّق",
+    question: "«من قرّر، ومتى، وبأي دليل؟»",
+    sees: "السجل كاملاً والأدلة المرفقة، بلا صلاحية تعديل واحدة — ولا زرّ اعتماد في أي شاشة."
+  },
+  {
+    name: "المسؤول التقني",
+    question: "«هل الوكيل يعمل كما يجب؟»",
+    sees: "صحة كل مصدر، زمن الدورة، والنموذج العامل بإصداره ونسخة تعليماته — بلا وصول إلى محتوى البنود."
+  }
+];
+
 /** فتحة العدسة: حلقة مصمتة بفجوة سداسية، تقطعها ست شفرات. الشكل الوحيد في الصفحة. */
 function Iris({ className, title }: { className?: string; title?: string }) {
   const R = 100;
@@ -111,15 +167,21 @@ export default function SitePage() {
             Xposure
           </a>
           <div className="s-nav-links">
+            <a href="#problem" className="s-nav-hide">
+              المشكلة
+            </a>
             <a href="#compare">المقارنة</a>
             <a href="#how" className="s-nav-hide">
               كيف يعمل
             </a>
-            <a href="#isolation" className="s-nav-hide">
-              العزل
+            <a href="#roles" className="s-nav-hide">
+              الأدوار
             </a>
-            <a href={DEMO_MAIL} style={{ fontWeight: 700 }}>
-              اطلب عرضاً
+            <a href="#isolation" className="s-nav-hide">
+              نموذج الثقة
+            </a>
+            <a href="/login" style={{ fontWeight: 700 }}>
+              ادخل العرض
             </a>
           </div>
         </nav>
@@ -142,8 +204,8 @@ export default function SitePage() {
             className="s-rise"
             style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBlockStart: 40, ["--d" as string]: "180ms" }}
           >
-            <a className="s-btn s-cut" href={DEMO_MAIL}>
-              اطلب عرضاً
+            <a className="s-btn s-cut" href="/login">
+              ادخل العرض التوضيحي
             </a>
             <a className="s-btn-quiet s-cut" href="#compare">
               شاهد المقارنة
@@ -151,6 +213,50 @@ export default function SitePage() {
           </div>
         </div>
       </header>
+
+      {/* ---------- المشكلة ---------- */}
+      {/**
+       * خمسة أسئلة يعرفها من يعمل في الامتثال، وجوابُ كل سؤال هو الألم نفسه.
+       * صفوف عريضة لا بطاقات: السؤال على حافة البداية والجواب يقابله.
+       */}
+      <section className="s-section" id="problem" style={{ background: "var(--s-field)" }}>
+        <div className="s-wrap">
+          <h2 className="s-h2 s-rise">الإصدار يُنشَر. وأنت تعرف متأخراً.</h2>
+          <p className="s-lede s-rise" style={{ marginBlockStart: 22, maxWidth: "54ch", ["--d" as string]: "80ms" }}>
+            لا أحد يتجاهل الامتثال عمداً. لكنّ متابعة وثيقة تتغيّر كل بضع سنوات عملٌ يدوي لا ينتهي،
+            وهذا ثمنه اليوم.
+          </p>
+
+          <div style={{ marginBlockStart: 56, display: "grid", gap: 10 }}>
+            {PAINS.map((x, i) => (
+              <div
+                key={x.q}
+                className="s-rise"
+                style={{
+                  background: "var(--s-ground)",
+                  padding: "clamp(22px, 2.6vw, 34px)",
+                  display: "grid",
+                  gap: "clamp(10px, 2vw, 44px)",
+                  gridTemplateColumns: "minmax(190px, 0.42fr) 1fr",
+                  alignItems: "start",
+                  ["--d" as string]: `${i * 70}ms`
+                }}
+              >
+                <h3 className="s-h3" style={{ margin: 0 }}>
+                  {x.q}
+                </h3>
+                <p className="s-body" style={{ margin: 0 }}>
+                  {x.a}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <p className="s-note s-rise" style={{ marginBlockStart: 28, maxWidth: "64ch" }}>
+            والنتيجة واحدة دائماً: يُكتشَف الفرق متأخراً، فيصير عمل أشهر مطلوباً في أسابيع.
+          </p>
+        </div>
+      </section>
 
       {/* ---------- الشيء الحيّ: المقارنة ---------- */}
       <section className="s-section" id="compare" style={{ background: "var(--s-field)" }}>
@@ -307,7 +413,7 @@ export default function SitePage() {
                 <p className="s-tile-title">{x.title}</p>
               </div>
             ))}
-            <a className="s-tile" href="/dashboard" style={{ background: "var(--s-field-2)" }}>
+            <a className="s-tile" href="/login" style={{ background: "var(--s-field-2)" }}>
               <p className="s-tile-title">
                 <span className="s-fig">+3</span> أخرى. افتح القائمة كاملة ←
               </p>
@@ -352,7 +458,7 @@ export default function SitePage() {
                       {d}
                     </p>
                     <p style={{ margin: "6px 0 0", fontSize: 17, fontWeight: 700 }}>
-                      {n} {n > 2 ? "بنود" : "بندان"} تستحق في هذا اليوم
+                      {n === 1 ? "بند واحد يستحق" : n === 2 ? "بندان يستحقّان" : `${n} بنود تستحق`} في هذا اليوم
                     </p>
                     {/* أسماء البنود نفسها: الشريط يحمل معلومة لا علامة */}
                     <ul style={{ listStyle: "none", margin: "14px 0 0", padding: 0, display: "grid", gap: 7 }}>
@@ -380,7 +486,11 @@ export default function SitePage() {
       {/* ---------- كيف يعمل ---------- */}
       <section className="s-section" id="how">
         <div className="s-wrap">
-          <h2 className="s-h2 s-rise">يرصد. يقارن. ثم تقرّر أنت.</h2>
+          <h2 className="s-h2 s-rise">خمس مراحل. آخرتُها توقّف.</h2>
+          <p className="s-body s-rise" style={{ marginBlockStart: 20, maxWidth: "58ch", ["--d" as string]: "80ms" }}>
+            الوكيل يمرّ بالمراحل نفسها في كل دورة، ويقف عند الخامسة دائماً: لا يعتمد بنداً، ولا يعتبر متطلباً
+            مستوفى، ولا يعدّل ملفاً واحداً في المنشأة.
+          </p>
 
           {/**
            * ثلاثة صفوف عريضة لا ثلاث بطاقات متطابقة: صفّ البطاقات هو الشكل الذي
@@ -399,9 +509,12 @@ export default function SitePage() {
               }}
             >
               <div style={{ padding: "clamp(28px, 3.4vw, 52px)" }}>
-                <h3 className="s-h3">يرصد</h3>
+                <p className="s-note" style={{ margin: "0 0 10px" }}>
+                  المرحلة <span className="s-fig">1</span> من <span className="s-fig">5</span>
+                </p>
+                <h3 className="s-h3">الجلب</h3>
                 <p className="s-body" style={{ marginBlockStart: 14 }}>
-                  يفحص مصادر الجهات كل صباح عند الخامسة، ويقارن بصمة النص بآخر نسخة محفوظة. لا إصدار جديد يمرّ دون أن
+                  يفحص صفحات الجهات كل صباح عند الخامسة، ويحفظ الملف الخام كما نُشر مع بصمته. لا إصدار جديد يمرّ دون أن
                   يُسجَّل وقت رصده.
                 </p>
               </div>
@@ -418,12 +531,20 @@ export default function SitePage() {
 
             {[
               {
-                h: "يقارن",
+                h: "المقارنة",
                 b: "يستبعد الكود الفروق الشكلية، ترقيماً وتنسيقاً ومسافات، قبل أن يصل النص إلى النموذج، فلا يُستهلك حكم بشري على فاصلة."
               },
               {
-                h: "تقرّر أنت",
-                b: "لا يغلق الوكيل بنداً ولا يعتبر متطلباً مستوفى. كل قرار يحمل اسمك ووقته، ويُكتب في سجل لا يقبل التعديل."
+                h: "تحليل الأثر",
+                b: "كل فرق جوهري يُربط بما يمسّه فعلاً: المنتجات، وخطوط العمليات، والضوابط الداخلية المقابلة له — فالقرار لا يُتّخَذ على نصّ مجرّد."
+              },
+              {
+                h: "فحص الاستشهاد",
+                b: "يتحقّق الكود — لا النموذج — من وجود كل نص مقتبس حرفياً في الملف الخام المحفوظ. ما لم يُنشَر لا يُعرَض."
+              },
+              {
+                h: "ثم تقرّر أنت",
+                b: "يتوقّف الوكيل هنا وينتظر. الاعتماد يُنشئ مهمة باسم مالكها وموعدها، والرفض يحتاج سبباً مكتوباً — وكلاهما يُكتب باسمك في سجل لا يقبل التعديل."
               }
             ].map((x, i) => (
               <div
@@ -431,19 +552,77 @@ export default function SitePage() {
                 className="s-rise"
                 style={{
                   /* الصفّ الأخير بحقل اللكنة: يكسر تكرار الصفّين، ويُبرز أهمّ دعاوى الصفحة */
-                  background: i === 1 ? "var(--s-accent)" : "var(--s-field)",
-                  color: i === 1 ? "var(--s-on-accent)" : undefined,
+                  background: i === 3 ? "var(--s-accent)" : "var(--s-field)",
+                  color: i === 3 ? "var(--s-on-accent)" : undefined,
                   padding: "clamp(28px, 3.4vw, 52px)",
                   display: "grid",
                   gap: "clamp(16px, 3vw, 56px)",
-                  gridTemplateColumns: i === 1 ? "1fr" : "minmax(140px, 0.4fr) 1fr",
+                  gridTemplateColumns: i === 3 ? "1fr" : "minmax(150px, 0.4fr) 1fr",
                   alignItems: "start",
                   ["--d" as string]: `${(i + 1) * 90}ms`
                 }}
               >
-                <h3 className={i === 1 ? "s-h2" : "s-h3"}>{x.h}</h3>
-                <p className="s-body" style={i === 1 ? { fontSize: 21, maxWidth: "46ch" } : undefined}>
+                <div>
+                  <p className="s-note" style={{ margin: "0 0 10px", color: i === 3 ? "var(--s-on-accent)" : undefined }}>
+                    المرحلة <span className="s-fig">{i + 2}</span> من <span className="s-fig">5</span>
+                  </p>
+                  <h3 className={i === 3 ? "s-h2" : "s-h3"}>{x.h}</h3>
+                </div>
+                <p
+                  className={i === 3 ? undefined : "s-body"}
+                  style={i === 3 ? { fontSize: 21, maxWidth: "46ch", lineHeight: 1.55, margin: 0 } : undefined}
+                >
                   {x.b}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- الأدوار ---------- */}
+      {/**
+       * تطبيق واحد لخمسة أدوار: كل دور يُعرَف بسؤاله الأول لا بمسمّاه الوظيفي،
+       * لأن المسمّى يختلف بين منشأة وأخرى، والسؤال واحد.
+       */}
+      <section className="s-section" id="roles">
+        <div className="s-wrap">
+          <h2 className="s-h2 s-rise">خمسة أدوار. شاشة لكل سؤال.</h2>
+          <p className="s-body s-rise" style={{ marginBlockStart: 20, maxWidth: "58ch", ["--d" as string]: "80ms" }}>
+            لا خمسة أنظمة ولا خمس نسخ: تطبيق واحد يعرض لكل دور ما يخصّه، ويمنع عنه ما لا يملكه.
+            صلاحية الاعتماد عند دور واحد — وهذا ما يجعل لسجل التدقيق معنى.
+          </p>
+
+          <div
+            style={{
+              marginBlockStart: 56,
+              display: "grid",
+              gap: 10,
+              /* خمسة أعمدة على العريض: بطاقة وحيدة في صفّ ثانٍ تترك مساحة ميتة بعرض أربع بطاقات */
+              gridTemplateColumns: "repeat(auto-fit, minmax(214px, 1fr))"
+            }}
+          >
+            {ROLES_ON_SITE.map((r, i) => (
+              <div
+                key={r.name}
+                className="s-rise"
+                style={{
+                  background: i === 0 ? "var(--s-accent)" : "var(--s-field)",
+                  color: i === 0 ? "var(--s-on-accent)" : undefined,
+                  padding: "clamp(24px, 2.6vw, 36px)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 14,
+                  minHeight: 232,
+                  ["--d" as string]: `${i * 70}ms`
+                }}
+              >
+                <h3 className="s-h3" style={{ margin: 0 }}>
+                  {r.name}
+                </h3>
+                <p style={{ margin: 0, fontSize: 17, lineHeight: 1.55, fontWeight: 600 }}>{r.question}</p>
+                <p className={i === 0 ? undefined : "s-body"} style={{ margin: "auto 0 0", fontSize: 15, lineHeight: 1.6 }}>
+                  {r.sees}
                 </p>
               </div>
             ))}
@@ -463,6 +642,9 @@ export default function SitePage() {
             }}
           >
             <div>
+              <p className="s-note s-rise" style={{ margin: "0 0 14px" }}>
+                نموذج الثقة
+              </p>
               <h2 className="s-h2 s-rise">لا يخرج نصّ واحد من شبكتك.</h2>
               <p className="s-body s-rise" style={{ marginBlockStart: 22, ["--d" as string]: "80ms" }}>
                 النماذج تعمل على أجهزتك أنت: <span dir="ltr">Qwen2.5 14B</span> محلياً. لا مفتاح لمزوّد خارجي، ولا نسخة
@@ -473,8 +655,11 @@ export default function SitePage() {
                 style={{ listStyle: "none", margin: "32px 0 0", padding: 0, display: "grid", gap: 16, ["--d" as string]: "160ms" }}
               >
                 {[
-                  "نواة معزولة: الفحص والمقارنة والتحليل كلها داخل المحيط.",
-                  "سجل تدقيق لا يقبل التعديل ولا الحذف، وأي تغيير قرار يُسجَّل قراراً جديداً.",
+                  "نماذج محلية: النموذج يعمل على عتاد المنشأة، بلا مفتاح مزوّد خارجي ولا استدعاء سحابي.",
+                  "قراءة فقط افتراضاً: لا يعدّل الوكيل ملفاً ولا سياسة، وأي صلاحية كتابة تُمنح صراحةً وتُسجّل.",
+                  "موافقة بشرية قبل أي أثر: لا مهمة تُنشَأ ولا بند يُغلَق إلا بقرار مختصّ مسجّل باسمه.",
+                  "لا شيء يغادر المنشأة: الوثائق والسجلات والقرارات تبقى داخل المحيط، والجلب وحده يخرج إلى ما نُشر علناً.",
+                  "سجل تدقيق لا يقبل التعديل ولا الحذف، وأي تغيير قرار يُسجَّل قراراً جديداً فوقه.",
                   "النموذج يشرح سبب الأولوية ولا يحسب درجتها؛ الدرجة معادلة ثابتة يمكن مراجعتها."
                 ].map((t) => (
                   <li key={t} style={{ display: "flex", gap: 14 }}>
@@ -576,15 +761,21 @@ export default function SitePage() {
         />
         <div className="s-wrap" style={{ position: "relative", zIndex: 1 }}>
           <h2 className="s-display s-rise" style={{ maxWidth: "16ch" }}>
-            جرّبه على ضوابطك أنت.
+            ادخل العرض بالدور الذي يعنيك.
           </h2>
           <p className="s-lede s-rise" style={{ marginBlockStart: 26, ["--d" as string]: "80ms" }}>
-            نأخذ نسخة من الضوابط التي تلتزم بها، ونعرض عليك الفروق الجوهرية في الإصدار التالي خلال أسبوع، داخل بيئتك
-            بلا نقل بيانات.
+            خمسة حسابات جاهزة، حساب لكل دور، بلا كلمة مرور: ادخل كمسؤول امتثال فترى التدفّق كاملاً،
+            أو كمدقّق فترى الشاشة نفسها بلا زر قرار واحد.
           </p>
-          <div className="s-rise" style={{ marginBlockStart: 40, ["--d" as string]: "160ms" }}>
-            <a className="s-btn s-cut" href={DEMO_MAIL}>
-              اطلب عرضاً
+          <div
+            className="s-rise"
+            style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBlockStart: 40, ["--d" as string]: "160ms" }}
+          >
+            <a className="s-btn s-cut" href="/login">
+              ادخل العرض التوضيحي
+            </a>
+            <a className="s-btn-quiet s-cut" href={DEMO_MAIL}>
+              اطلب عرضاً على ضوابطك
             </a>
           </div>
         </div>
