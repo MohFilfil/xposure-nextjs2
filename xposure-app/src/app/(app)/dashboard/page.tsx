@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
-  Check,
   ChevronLeft,
   GitCompare,
   ListChecks,
@@ -20,6 +19,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PriorityBadge } from "@/components/ui/PriorityBadge";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { EmptyState, MotifSpinner } from "@/components/ui/BrandMotif";
+import { AGENT_STEPS, AgentActivity } from "@/components/ui/AgentActivity";
 import { Gauge } from "@/components/ui/Gauge";
 import { Portal } from "@/components/ui/Portal";
 import { DeadlineTimeline } from "@/components/ui/DeadlineTimeline";
@@ -30,15 +30,8 @@ import { useDecisions } from "@/components/DecisionsProvider";
 import { useSession } from "@/components/SessionProvider";
 import { CHANGES, COMPANY, TASKS } from "@/lib/data";
 import type { Priority, RegChange, Status } from "@/lib/types";
-import { daysUntil, cx } from "@/lib/utils";
+import { daysUntil } from "@/lib/utils";
 import { PRIORITY_LABEL, PRIORITY_VAR, STATUS_LABEL, STATUS_VAR } from "@/lib/vocab";
-
-const SCAN_STEPS = [
-  "فحص مصادر الجهات المفعّلة (1 مصدر)…",
-  "مقارنة بصمة النص بآخر نسخة محفوظة…",
-  "لا إصدار جديد. إعادة فحص المسودات المفتوحة…",
-  "اكتمل الفحص."
-];
 
 /** سلاسل عرض توضيحي لآخر ستة فحوص — تُستبدل بقيم محرك المقارنة عند الربط الفعلي. */
 const TREND = {
@@ -56,15 +49,20 @@ export default function DashboardPage() {
   const { can } = useSession();
   const [scanStep, setScanStep] = useState<number | null>(null);
 
+  /**
+   * الفحص يمرّ بالمراحل الخمس نفسها المعروضة في صفحة المصادر — مصدر واحد
+   * لوصف عمل الوكيل في المنتج كله، وآخرها دائماً: توقّف بانتظار قرار بشري.
+   */
   function runScan() {
+    if (scanStep !== null) return;
     setScanStep(0);
     const tick = (i: number) => {
-      if (i < SCAN_STEPS.length) {
+      if (i < AGENT_STEPS.length) {
         setScanStep(i);
-        setTimeout(() => tick(i + 1), 750);
+        setTimeout(() => tick(i + 1), 900);
       } else {
         setScanStep(null);
-        toast("success", "اكتمل الفحص في 3.1 ثانية. لا إصدارات جديدة منذ رصد ECC-2:2024.");
+        toast("success", "اكتمل الفحص. لا إصدارات جديدة منذ رصد ECC-2:2024 — والوكيل متوقّف بانتظار قرارك.");
       }
     };
     tick(0);
@@ -388,34 +386,23 @@ function Section({
 }
 
 /**
- * شاشة الفحص: الخطوات تُكتب سطراً بعد سطر وتُعلَّم بعلامة صح عند تجاوزها.
- * السطر الجاري وحده مضيء — بلا ذلك تبدو القائمة نصاً ساكناً لا عملية جارية.
+ * شاشة الفحص: المراحل الخمس نفسها التي تعرضها صفحة المصادر، تتقدّم مرحلة مرحلة.
+ * المرحلة الأخيرة ليست «اكتمل الفحص» بل «توقّف بانتظار قرارك» — وهذا هو الوعد
+ * الذي يقوم عليه المنتج، فيُرى في الشاشة لا في الوثائق وحدها.
  */
 function ScanOverlay({ step }: { step: number }) {
   return (
     <Portal>
       <div
-        className="fixed inset-0 z-overlay flex animate-fade-in flex-col items-center justify-center gap-7 bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] backdrop-blur-[4px]"
+        className="fixed inset-0 z-overlay flex animate-fade-in flex-col items-center justify-center gap-6 bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] px-4 backdrop-blur-[4px]"
         role="status"
         aria-live="polite"
       >
-        <MotifSpinner className="h-16 w-16" />
+        <MotifSpinner className="h-14 w-14" />
         <p className="font-display text-h1 text-ink">جارٍ فحص المصادر</p>
-        <ol className="flex flex-col gap-2.5 font-body text-body-sm">
-          {SCAN_STEPS.slice(0, step + 1).map((s, i) => (
-            <li
-              key={s}
-              className={cx("flex animate-slide-start items-center gap-2.5", i === step ? "text-ink" : "text-ink-subtle")}
-            >
-              {i < step ? (
-                <Check size={16} strokeWidth={2.5} className="text-success" aria-hidden />
-              ) : (
-                <span className="h-1.5 w-1.5 animate-caret-blink rounded-full bg-brand" aria-hidden />
-              )}
-              {s}
-            </li>
-          ))}
-        </ol>
+        <div className="panel w-full max-w-[520px] p-5">
+          <AgentActivity active={step} />
+        </div>
       </div>
     </Portal>
   );

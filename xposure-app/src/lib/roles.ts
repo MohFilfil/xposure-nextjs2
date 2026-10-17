@@ -60,7 +60,7 @@ export const ROLES: Record<Role, RoleSpec> = {
     scope: "يراجع كل تغيير ويبتّ فيه: اعتماد التوصية فتُنشأ مهمة، أو رفضها بسبب مكتوب. هذا الدور صاحب القرار.",
     account: { name: "محمد الفلفل", title: "مسؤول الامتثال — صلاحية مراجعة واعتماد", email: "m.alfilfil@internal.local" },
     permissions: ["decide", "requestAnalysis", "scan", "addSource", "export", "resetDemo"],
-    nav: ["/dashboard", "/changes", "/tasks", "/audit", "/settings"]
+    nav: ["/dashboard", "/changes", "/tasks", "/sources", "/audit", "/settings"]
   },
   owner: {
     label: "مالك عملية / منتج",
@@ -74,14 +74,14 @@ export const ROLES: Record<Role, RoleSpec> = {
     scope: "يقرأ ولا يكتب: سجل التدقيق والأدلة وقرارات المراجعين. لا يملك زر اعتماد ولا رفض في أي شاشة.",
     account: { name: "عبدالله الشمري", title: "مدقّق داخلي", email: "a.alshamri@internal.local" },
     permissions: ["export"],
-    nav: ["/dashboard", "/changes", "/tasks", "/audit", "/settings"]
+    nav: ["/dashboard", "/changes", "/tasks", "/sources", "/audit", "/settings"]
   },
   admin: {
     label: "مسؤول تقني",
     scope: "يشغّل الوكيل ويراقبه: صحة المصادر، حالة النماذج، مستوى التبنّي والربط التقني. لا يبتّ في محتوى البنود.",
     account: { name: "ياسر الزهراني", title: "مسؤول الأنظمة التقنية", email: "y.alzahrani@internal.local" },
     permissions: ["scan", "addSource", "manageAgent", "export", "resetDemo"],
-    nav: ["/dashboard", "/audit", "/settings"]
+    nav: ["/dashboard", "/sources", "/audit", "/settings"]
   }
 };
 

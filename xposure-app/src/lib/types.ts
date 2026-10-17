@@ -52,10 +52,36 @@ export interface AuditEntry {
   who: string;
 }
 
+/**
+ * حالة المصدر التنظيمي:
+ * - active: مفعّل ويُفحص بالجدول.
+ * - paused: موقوف مؤقتاً بقرار مسؤول تقني.
+ * - pending: طلب إضافة بانتظار موافقة المختص — لا يُفحص قبلها.
+ * - soon: مُعدّ في النظام ولم يُفعّل بعد.
+ */
+export type SourceState = "active" | "paused" | "pending" | "soon";
+
 export interface Source {
+  id: string;
+  /** اسم الجهة كاملاً. */
   name: string;
-  detail: string;
-  state: "active" | "soon";
+  /** الاختصار اللاتيني للجهة — يُعرَض معزولاً باتجاه LTR. */
+  short: string;
+  /** الوثائق المتابَعة من هذه الجهة. */
+  docs: string;
+  state: SourceState;
+  /** آخر فحص بصيغة YYYY-MM-DD HH:MM، أو null لمن لم يُفحص بعد. */
+  lastScan: string | null;
+  /** تكرار الفحص المجدول. */
+  frequency: string;
+  /** نتيجة آخر فحص بجملة واحدة. */
+  lastResult: string;
+  /** الإصداران اللذان تجري المقارنة بينهما إن وجدا. */
+  versions?: { from: string; to: string };
+  /** عدد التغييرات الجوهرية المرصودة من هذا المصدر. */
+  changes?: number;
+  /** طلب الإضافة: من طلبه ومتى — للمصادر في حالة pending. */
+  requested?: { by: string; at: string };
 }
 
 export interface Decision {

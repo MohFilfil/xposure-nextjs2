@@ -11,6 +11,7 @@ import {
   Lock,
   PanelRightClose,
   PanelRightOpen,
+  Radar,
   Settings2
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -47,6 +48,13 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     icon: ListChecks,
     group: "المراجعة",
     countLabel: "مهام مفتوحة"
+  },
+  "/sources": {
+    href: "/sources",
+    label: "المصادر التنظيمية",
+    icon: Radar,
+    group: "النظام",
+    countLabel: "بانتظار موافقة المختص"
   },
   "/audit": { href: "/audit", label: "سجل التدقيق", icon: History, group: "النظام" },
   "/settings": { href: "/settings", label: "الإعدادات", icon: Settings2, group: "النظام" }

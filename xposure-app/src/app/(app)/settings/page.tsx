@@ -1,12 +1,11 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import { Moon, Plus, RotateCcw, Sun } from "lucide-react";
+import { Moon, RotateCcw, Sun } from "lucide-react";
 import { Eyebrow, Page, PageHead } from "@/components/layout/Page";
 import { Button } from "@/components/ui/Button";
 import { Card, CardFoot, CardHead } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Input, Radio } from "@/components/ui/FormControls";
 import { Reveal } from "@/components/motion/Reveal";
 import { useTheme } from "@/components/ThemeProvider";
@@ -14,13 +13,12 @@ import { useDecisions } from "@/components/DecisionsProvider";
 import { useSession } from "@/components/SessionProvider";
 import { ROLES } from "@/lib/roles";
 import { useToast } from "@/components/ui/Toast";
-import { SOURCES } from "@/lib/data";
 import { cx } from "@/lib/utils";
 
+/** الإعدادات لا تحمل إلا ما يخصّ المستخدم: المصادر التنظيمية شاشة عمل قائمة بذاتها. */
 const TABS = [
   { id: "profile", label: "الملف الشخصي" },
-  { id: "prefs", label: "التفضيلات" },
-  { id: "sources", label: "المصادر التنظيمية" }
+  { id: "prefs", label: "التفضيلات" }
 ];
 
 const LEVELS = [
@@ -169,36 +167,6 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {tab === "sources" && (
-        <Reveal>
-          <Card className="max-w-[760px]">
-            <CardHead
-              title="المصادر المتابَعة"
-              aside={
-                <Button variant="secondary" size="sm" onClick={() => toast("info", "إضافة مصدر جديد تحتاج موافقة المختص.")}>
-                  <Plus size={20} strokeWidth={2} aria-hidden />
-                  إضافة مصدر
-                </Button>
-              }
-            />
-            <ul>
-              {SOURCES.map((s) => (
-                <li
-                  key={s.name}
-                  className="flex items-center justify-between gap-4 rounded-md border-b border-hairline px-2 py-4 transition-colors duration-1 last:border-b-0 hover:bg-surface-overlay"
-                >
-                  <span className="flex flex-col gap-1">
-                    <span className="font-body text-body font-semibold text-ink">{s.name}</span>
-                    <span className="font-body text-body-sm text-ink-muted">{s.detail}</span>
-                  </span>
-                  {s.state === "active" ? <StatusBadge status="approved" /> : <Chip>قريباً</Chip>}
-                </li>
-              ))}
-            </ul>
-            <CardFoot>إضافة مصدر جديد تحتاج موافقة المختص، ولا تتطلب تعديلاً في الكود الأساسي.</CardFoot>
-          </Card>
-        </Reveal>
-      )}
     </Page>
   );
 }
