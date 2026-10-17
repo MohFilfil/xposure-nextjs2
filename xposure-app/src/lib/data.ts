@@ -309,3 +309,24 @@ export const LAST_RUN_STAMPS: Record<string, string> = {
   citation: '2026-09-17 06:16',
   await: '2026-09-17 06:16'
 };
+
+/**
+ * حالة الوكيل والنموذج كما يراها المسؤول التقني.
+ * عند الربط الفعلي تأتي من نقطة صحة في FastAPI لا من ثابت هنا.
+ */
+export const AGENT_STATUS = {
+  model: 'Qwen2.5 14B',
+  quantization: 'Q5_K_M',
+  instructions: 'v3',
+  runtime: 'داخل الشبكة — بلا اتصال خارجي',
+  host: 'xpo-core-01 · غرفة الخوادم ب',
+  accelerator: 'NVIDIA L40S · 48GB',
+  memoryUsed: 28,
+  memoryTotal: 48,
+  lastCycle: '2026-09-18 05:00',
+  cycleSeconds: 184,
+  queue: 0,
+  uptimeDays: 62,
+  /** عتبة الثقة التي تُحوّل دونها البنود للمراجعة اليدوية. */
+  threshold: 70
+};
